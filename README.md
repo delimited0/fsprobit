@@ -17,7 +17,7 @@ An in-depth paragraph about your project and overview of use.
 
 ### Installing
 
-* How/where to download your program
+* devtools::install_github('delimited0/fsprobit')
 * Any modifications needed to be made to files/folders
 
 ### Executing program
