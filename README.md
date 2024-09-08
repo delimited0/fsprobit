@@ -1,4 +1,4 @@
-# Project Title
+# Fast Estimation of Large Multivariate and Multinomial Probit Models
 
 Simple overview of use/purpose.
 
