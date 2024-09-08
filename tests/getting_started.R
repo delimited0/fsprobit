@@ -1,6 +1,5 @@
 library(fsprobit)
 library(mvtnorm)
-l
 
 p = 1
 n_obs = 2000
@@ -34,6 +33,7 @@ simdata = generate_custom_identified_choice_data(
 )
 
 # fit model ----
+registerDoParallel(4)
 probit_trace_iden = mnp_probit(
   X = simdata$X, Y = simdata$Y,
   beta_init = coef_init,
