@@ -1,6 +1,6 @@
 # Fast Estimation of Large Multivariate and Multinomial Probit Models
 
-Simple overview of use/purpose.
+This package allows users to estimate probit models of discrete choice and time series data with large-dimensional response variables. 
 
 ## Description
 
