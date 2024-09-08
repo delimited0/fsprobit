@@ -28,6 +28,10 @@ An in-depth paragraph about your project and overview of use.
 code blocks for commands
 ```
 
+### Example code
+
+* Example code available in the test folder
+
 ## Help
 
 Any advise for common problems or issues.
