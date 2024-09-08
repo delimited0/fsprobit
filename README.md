@@ -12,6 +12,7 @@ An in-depth paragraph about your project and overview of use.
 
 * Describe any prerequisites, libraries, OS version, etc., needed before installing program.
 * ex. Windows 10
+* Requires the epmgpr R package: devtools::install_github('delimited0/epmgpr')
 
 ### Installing
 
