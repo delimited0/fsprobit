@@ -1,5 +1,6 @@
 library(fsprobit)
 library(mvtnorm)
+library(doParallel)
 
 p = 1
 n_obs = 2000

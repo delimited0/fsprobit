@@ -48,6 +48,7 @@ utility_shift_constraints = function(n_choices)
 }
 
 #' @param constraints list of constraint matrices, with first element corresponding to base choice
+#' @importFrom epmgpr moments2
 #' @param Sigma \eqn{m-1 \times m-1} covariance matrix
 #' @return list of approximate means and covariances
 utility_ep_approximations = function(constraints, Sigma)

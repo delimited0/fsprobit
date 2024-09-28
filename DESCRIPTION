@@ -9,6 +9,7 @@ Description: More about what it does (maybe more than one line)
 License: MIT I guess
 Encoding: UTF-8
 LazyData: true
-Imports: Rcpp (>= 1.0.12), tmg, tictoc, doRNG, doParallel, tmvtnorm, epmgpr
+Imports: Rcpp (>= 1.0.12), tmg, tictoc, doParallel, mvtnorm, epmgpr, CVXR
+Depends: doRNG, epmgpr
 LinkingTo: Rcpp
 VignetteBuilder: knitr

@@ -1,8 +1,8 @@
 # source('constraint_tools.R')
 # source('em_tools.R')
-library(doRNG)
-library(doParallel)
-library(tictoc)
+# library(doRNG)
+# library(doParallel)
+# library(tictoc)
 
 #' precision parameterized, direct opt
 #' n is number of observations
@@ -38,7 +38,7 @@ mnp_probit = function(
   # if (verbose)
   #   options(progressr.enable = TRUE)
 
-  tic()
+  tictoc::tic()
   n_obs = length(Y)
   p = dim(X)[3]
   # p = 1
@@ -317,7 +317,7 @@ mnp_probit = function(
     Sigma = Sigma_new
     # Precision = Precision_new
   }
-  elapsed = toc(quiet = (!(verbose != 0)))
+  elapsed = tictoc::toc(quiet = (!(verbose != 0)))
 
   if (verbose != 0)
     print(paste0("Total iterations: ", iter))

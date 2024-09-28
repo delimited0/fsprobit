@@ -7,11 +7,13 @@ library(tmg)
 #' Compute per observation 1st and 2nd moments for multinomial probit
 #' Input can be subset of observations. Elements of X, y, and constraints must
 #' correspond to same observations.
+#' @importFrom epmgpr moments
 #' @param beta coefficient
 #' @param Sigma utility covariance
 #' @param x m x p matrix, covariate
 #' @param y factor response
 #' @param A constraint matrix
+#' @return list of approximate means and covariances
 mnp_ep_moments = function(Xbeta, Sigma, y, A, transform = FALSE)
 {
   m = nrow(Xbeta)
@@ -177,7 +179,7 @@ Prec_cvx_estimation = function(
     )
   }
   prob = Problem(Maximize(objective), constr)
-  cvx_solution = CVXR::psolve(prob)
+  cvx_solution = psolve(prob)
   Precision_new = cvx_solution$getValue(Prec)
 
   return(Precision_new)
