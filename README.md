@@ -1,6 +1,6 @@
 # Fast Estimation of Large Multivariate and Multinomial Probit Models
 
-Simple overview of use/purpose.
+This package allows users to estimate probit models of discrete choice and time series data with large-dimensional response variables. 
 
 ## Description
 
@@ -17,7 +17,7 @@ An in-depth paragraph about your project and overview of use.
 
 ### Installing
 
-* How/where to download your program
+* devtools::install_github('delimited0/fsprobit')
 * Any modifications needed to be made to files/folders
 
 ### Executing program
@@ -27,6 +27,10 @@ An in-depth paragraph about your project and overview of use.
 ```
 code blocks for commands
 ```
+
+### Example code
+
+* Example code available in the test folder
 
 ## Help
 
