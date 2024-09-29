@@ -1,20 +1,28 @@
+---
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 # Fast Estimation of Large Multivariate and Multinomial Probit Models
 
 This package allows users to estimate probit models of discrete choice and time series data with large-dimensional response variables.
 
 ## Dependencies
 
-Install the `devtools` package from CRAN.
+Install the ```devtools``` package from CRAN.
 
-``` r
+```{r, eval=FALSE}
 install.packages('devtools')
 ```
 
-This package depends on the following packages, not available in CRAN: `epmgpr` and `tmg`.
+This package depends on the following packages, not available in CRAN: ```epmgpr``` and ```tmg```.
 
 They can be installed with the following code:
 
-``` r
+```{r, eval=FALSE}
 devtools::install_github('delimited0/epmgpr')
 devtools::install_github('cran/tmg')
 ```
@@ -23,13 +31,14 @@ devtools::install_github('cran/tmg')
 
 Once the non-CRAN dependencies are installed, install the package with
 
-``` r
+```{r, eval=FALSE}         
 devtools::install_github('delimited0/fsprobit')
 ```
 
 ### Example execution
 
-We simulate data for a four alternative problem. After identification for level and scale shifts, we have true parameters
+We simulate data for a four alternative problem. 
+After identification for level and scale shifts, we have true parameters
 
 $$
 \begin{align}
@@ -46,7 +55,7 @@ $$
 \end{align}
 $$
 
-We generate the choices, latent utilities and covariates with
+We generate the choices, latent utilities and covariates with 
 
 $$
 \begin{align}
@@ -63,7 +72,7 @@ $$
 \end{align}
 $$
 
-``` r
+```{r, eval=FALSE}
 library(fsprobit)
 library(mvtnorm)
 library(doParallel)
@@ -129,7 +138,7 @@ probit_trace_iden$Precision
 Contributors names and contact info
 
 Patrick Ding\
-[patrickding00\@gmail.com](mailto:patrickding00@gmail.com){.email}
+patrickding00@gmail.com
 
 ## Version History
 
