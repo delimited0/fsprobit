@@ -3,6 +3,7 @@ library("CVXR")
 # E step methods
 library(tmvtnorm)
 library(tmg)
+library(MomTrunc)
 
 #' Compute per observation 1st and 2nd moments for multinomial probit
 #' Input can be subset of observations. Elements of X, y, and constraints must
@@ -87,7 +88,7 @@ mnp_hmc_moments = function(Xbeta, Precision, y, A, n_mc)
     ub = rep(0, m)
 
     samples =
-      rtmg(
+      tmg::rtmg(
         n=n_mc,
         M=Precision,
         r=as.vector(Precision %*% Xbeta),
@@ -102,7 +103,7 @@ mnp_hmc_moments = function(Xbeta, Precision, y, A, n_mc)
     ub = rep(Inf, m)
 
     samples =
-      rtmg(
+      tmg::rtmg(
         n=n_mc,
         M=Precision,
         r=as.vector(Precision %*% Xbeta),
@@ -110,6 +111,98 @@ mnp_hmc_moments = function(Xbeta, Precision, y, A, n_mc)
         f = A,
         g = lb
       )
+  }
+  moments = list(mu = colMeans(samples), Sigma = cov(samples))
+
+  return(moments)
+}
+
+mnp_momtrunc_moments = function(Xbeta, Sigma, y, A)
+{
+  m = nrow(Xbeta)
+  base_choice = levels(y)[1]
+
+  kappa = rep(1, nrow(Xbeta))
+
+  if (y == base_choice)
+  {
+    lb = rep(-Inf, m)
+    ub = rep(0, m)
+
+
+    utility_moments = MomTrunc::momentsTMD(
+      kappa = kappa,
+      lower = lb,
+      upper = ub,
+      mu = Xbeta,
+      Sigma = Sigma,
+      dist = "normal"
+    )
+  }
+  else
+  {
+    lb = rep(0, m)
+    ub = rep(Inf, m)
+
+    # transform to axis aligned
+    AXbeta = A %*% Xbeta
+
+    utility_moments = MomTrunc::momentsTMD(
+      kappa = kappa,
+      lower = lb,
+      upper = ub,
+      mu = rep(0, m),
+      Sigma = A %*% tcrossprod(Sigma, A),
+      dist = "normal"
+    )
+
+    # transform back
+    utility_moments$mu = A %*% utility_moments$mu + Xbeta
+    utility_moments$Sigma = A %*% tcrossprod(utility_moments$Sigma, A)
+  }
+
+  return(utility_moments)
+}
+
+mnp_met_moments = function(Xbeta, Sigma, y, A, n_mc)
+{
+  m = nrow(Xbeta)
+
+  initial_point = initial_mc_point(y)
+
+  base_choice = levels(y)[1]
+  if (y == base_choice)  # base case
+  {
+    lb = rep(-Inf, m)
+    ub = rep(0, m)
+
+    samples = TruncatedNormal::rtmvnorm(
+        n=n_mc,
+        mu=as.vector(Xbeta),
+        sigma=Sigma,
+        lb=lb,
+        ub=ub,
+    )
+  }
+  else  # all other choices
+  {
+    lb = rep(0, m)
+    ub = rep(Inf, m)
+
+    # transform to axis aligned
+    AXbeta = A %*% Xbeta
+
+    samples = TruncatedNormal::rtmvnorm(
+      n=n_mc,
+      mu=rep(0, m),
+      sigma=A %*% tcrossprod(Sigma, A),
+      lb=lb - AXbeta,
+      ub=ub
+    )
+
+    # transform back
+    # recycle Xbeta to add mean per sample
+    samples = t( A %*% t(samples) + as.vector(Xbeta) )
   }
   moments = list(mu = colMeans(samples), Sigma = cov(samples))
 
