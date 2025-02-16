@@ -253,6 +253,7 @@ mnp_probit = function(
 
     # M step ----
     # beta estimation
+
     for (i in 1:length(obs_moments))
     {
       obs_idx = obs_set[i]
@@ -341,6 +342,10 @@ mnp_probit = function(
     {
       dmetric = abs(m_step_bound_new - m_step_bound_old)
       m_step_bound = m_step_bound_new
+    }
+    else if (conv_metric == "beta")
+    {
+      dmetric = max(abs(beta_new - beta_old))
     }
     else
       stop("invalid convergence metric")

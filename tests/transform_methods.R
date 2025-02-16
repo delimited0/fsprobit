@@ -36,8 +36,8 @@ simdata = generate_custom_identified_choice_data(
 constraints = utility_shift_constraints(n_choices)
 
 # fit model ----
-# registerDoParallel(4)
-registerDoSEQ()
+registerDoParallel(8)
+# registerDoSEQ()
 probit_trace_iden = mnp_probit(
   X = simdata$X, Y = simdata$Y,
   beta_init = coef_init,
@@ -75,7 +75,8 @@ probit_ep_iden =  mnp_probit(
   shift_iden_method = "ref",
   scale_iden_method = "trace",
   verbose=5,
-  record_history=TRUE
+  record_history=TRUE,
+  transform=TRUE
 )
 
 
@@ -99,6 +100,88 @@ samples = TruncatedNormal::rtmvnorm(
   lb=rep(-Inf, m),
   ub=rep(0, m),
 )
+
+
+# block -------------------------------------------------------------------
+library(Matrix)
+p = 1
+n_obs = 2000
+n_choices = 10
+
+tol = 1e-5
+conv_metric = "precision"
+relerr_tol = .1
+max_iter = 500
+
+set.seed(12)
+
+# Function to generate a random positive definite matrix
+generate_cov_matrix <- function(size) {
+  M <- matrix(rnorm(size^2), nrow = size)
+  cov_matrix <- crossprod(M)  # Make it symmetric positive definite
+  cov_matrix <- cov_matrix / max(abs(cov_matrix))  # Normalize for stability
+  return(cov_matrix)
+}
+
+generate_block_diag_cov <- function(n) {
+  # Generate random block sizes summing to n
+  sizes <- c()
+  remaining <- n
+  while (remaining > 0) {
+    size <- sample(1:min(remaining, 5), 1)  # Limit block size to 5 for variability
+    sizes <- c(sizes, size)
+    remaining <- remaining - size
+  }
+
+  # Construct the block diagonal matrix
+  blocks <- lapply(sizes, generate_cov_matrix)
+  cov_matrix <- bdiag(blocks)
+
+  return(as.matrix(cov_matrix))
+}
+
+Prec_iden = generate_block_diag_cov(n_choices-1)
+Sigma_iden = solve(Prec_iden)
+
+coef_true = as.matrix(c(2))
+
+# initial parameters
+Sigma_init = diag(n_choices-1)
+coef_init = as.matrix(c(.2))
+
+# covariate mean and sd
+n_mean = 0
+n_sd = 1
+
+simdata = generate_custom_identified_choice_data(
+  n_obs = n_obs,
+  sampler = function(n) rnorm(n, mean=n_mean, sd=n_sd),
+  coef_true = coef_true,
+  Sigma_iden = solve(Prec_iden),
+  seed = 1
+)
+
+probit_ep_iden =  mnp_probit(
+  X = simdata$X, Y = simdata$Y,
+  beta_init = coef_init,
+  Sigma_init = Sigma_init,
+  E_method = "EP",
+  E_sample_rate = 1,
+  M_method = "Newton",
+  n_choices = n_choices,
+  true_trace = sum(diag(Prec_iden)),
+  tol = tol,
+  newton_tol = 1e-3,
+  max_newton_iter = 50,
+  max_iter = max_iter,
+  conv_metric = conv_metric,
+  shift_iden_method = "ref",
+  scale_iden_method = "trace",
+  verbose=5,
+  record_history=TRUE,
+  transform=TRUE
+)
+
 
 
 

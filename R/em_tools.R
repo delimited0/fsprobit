@@ -186,7 +186,6 @@ mnp_met_moments = function(Xbeta, Sigma, y, A, n_mc)
   }
   else  # all other choices
   {
-    lb = rep(0, m)
     ub = rep(Inf, m)
 
     # transform to axis aligned
@@ -196,7 +195,7 @@ mnp_met_moments = function(Xbeta, Sigma, y, A, n_mc)
       n=n_mc,
       mu=rep(0, m),
       sigma=A %*% tcrossprod(Sigma, A),
-      lb=lb - AXbeta,
+      lb=-AXbeta,
       ub=ub
     )
 

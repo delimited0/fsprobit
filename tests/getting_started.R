@@ -51,7 +51,8 @@ probit_trace_iden = mnp_probit(
   conv_metric = conv_metric,
   shift_iden_method = "ref",
   scale_iden_method = "trace",
-  verbose=5
+  verbose=5,
+  transform=TRUE
 )
 
 # check result ---
