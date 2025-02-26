@@ -1,12 +1,13 @@
 library(fsprobit)
 library(mvtnorm)
 library(doParallel)
+library(MomTrunc)
 
 p = 1
 n_obs = 2000
 n_choices = 4
 
-tol = .001
+tol = 0.0005
 conv_metric = "precision"
 relerr_tol = .1
 max_iter = 500
@@ -36,9 +37,50 @@ simdata = generate_custom_identified_choice_data(
 constraints = utility_shift_constraints(n_choices)
 
 # fit model ----
-registerDoParallel(8)
+# registerDoParallel(8)
 # registerDoSEQ()
-probit_trace_iden = mnp_probit(
+probit_ep =  mnp_probit(
+  X = simdata$X, Y = simdata$Y,
+  beta_init = coef_init,
+  Sigma_init = Sigma_init,
+  E_method = "EP",
+  E_sample_rate = 1,
+  M_method = "Newton",
+  n_choices = n_choices,
+  true_trace = sum(diag(Prec_iden)),
+  tol = tol,
+  newton_tol = 1e-3,
+  max_newton_iter = 50,
+  max_iter = max_iter,
+  conv_metric = "beta",
+  shift_iden_method = "ref",
+  scale_iden_method = "trace",
+  verbose=5,
+  record_history=TRUE,
+  transform=TRUE
+)
+
+probit_momtrunc = mnp_probit(
+  X = simdata$X, Y = simdata$Y,
+  beta_init = coef_init,
+  Sigma_init = Sigma_init,
+  E_method = "MomTrunc",
+  E_sample_rate = 1,
+  M_method = "Newton",
+  n_choices = n_choices,
+  true_trace = sum(diag(Prec_iden)),
+  tol = tol,
+  newton_tol = 1e-3,
+  max_newton_iter = 50,
+  max_iter = max_iter,
+  conv_metric = conv_metric,
+  shift_iden_method = "ref",
+  scale_iden_method = "trace",
+  verbose=5,
+  record_history=TRUE
+)
+
+probit_met = mnp_probit(
   X = simdata$X, Y = simdata$Y,
   beta_init = coef_init,
   Sigma_init = Sigma_init,
@@ -58,27 +100,6 @@ probit_trace_iden = mnp_probit(
   record_history=TRUE
 )
 
-probit_ep_iden =  mnp_probit(
-  X = simdata$X, Y = simdata$Y,
-  beta_init = coef_init,
-  Sigma_init = Sigma_init,
-  E_method = "EP",
-  E_sample_rate = 1,
-  M_method = "Newton",
-  n_choices = n_choices,
-  true_trace = sum(diag(Prec_iden)),
-  tol = tol,
-  newton_tol = 1e-3,
-  max_newton_iter = 50,
-  max_iter = max_iter,
-  conv_metric = conv_metric,
-  shift_iden_method = "ref",
-  scale_iden_method = "trace",
-  verbose=5,
-  record_history=TRUE,
-  transform=TRUE
-)
-
 
 Xbeta = matrix(c(0.1, 0.2, 0.3))
 # Sigma = diag(n_choices-1)
@@ -86,7 +107,46 @@ Sigma = .3 * diag(n_choices-1) + .7 * rep(1, n_choices-1) %*% t(rep(1, n_choices
 y = factor(1)
 A = constraints[[y]]
 
-# mnp_momtrunc_moments(Xbeta, Sigma, y, A)
+m = nrow(A)
+lb = rep(0, m)
+ub = rep(Inf, m)
+
+MomTrunc::meanvarTMD(
+  lower = lb,
+  upper = ub,
+  mu = Xbeta,
+  lambda=0,
+  tau=0,
+  Sigma=Sigma,
+  dist='normal'
+)
+
+epmgpr::moments(
+  lb = lb,
+  ub = ub,
+  mu = Xbeta,
+  Sigma = Sigma
+)
+
+samples = TruncatedNormal::rtmvnorm(
+  n=1000,
+  mu=as.vector(Xbeta),
+  sigma=Sigma,
+  lb=lb,
+  ub=ub
+)
+colMeans(samples)
+cov(samples)
+
+# transform back
+# recycle Xbeta to add mean per sample
+samples = t( A %*% t(samples) + as.vector(Xbeta) )
+
+
+
+
+
+mnp_momtrunc_moments(Xbeta, Sigma, y, A)
 
 moments = mnp_met_moments(Xbeta, Sigma, y, A, 2000)
 ep_moments = mnp_ep_moments(Xbeta, Sigma, y, A)

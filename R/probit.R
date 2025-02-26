@@ -233,6 +233,10 @@ mnp_probit = function(
       {
         utility_moments = mnp_met_moments(Xbeta, Sigma_e, y, A, n_mc)
       }
+      else if (E_method == "MomTrunc")
+      {
+        utility_moments = mnp_momtrunc_moments(Xbeta, Sigma_e, y, A)
+      }
       else
         stop('Moments must be one of EP, HMC, Gibbs, or LINESS')
 

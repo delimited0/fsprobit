@@ -130,36 +130,44 @@ mnp_momtrunc_moments = function(Xbeta, Sigma, y, A)
     ub = rep(0, m)
 
 
-    utility_moments = MomTrunc::momentsTMD(
-      kappa = kappa,
+    utility_moments = MomTrunc::meanvarTMD(
       lower = lb,
       upper = ub,
       mu = Xbeta,
       Sigma = Sigma,
+      lambda=0,
+      tau=0,
       dist = "normal"
     )
+
+    utility_moments$mu = utility_moments$mean
+    utility_moments$Sigma = utility_moments$varcov
   }
   else
   {
-    lb = rep(0, m)
     ub = rep(Inf, m)
-
     # transform to axis aligned
     AXbeta = A %*% Xbeta
+    lb = -AXbeta
 
-    utility_moments = MomTrunc::momentsTMD(
-      kappa = kappa,
+    utility_moments = MomTrunc::meanvarTMD(
       lower = lb,
       upper = ub,
       mu = rep(0, m),
       Sigma = A %*% tcrossprod(Sigma, A),
+      lambda=0,
+      tau=0,
       dist = "normal"
     )
 
     # transform back
-    utility_moments$mu = A %*% utility_moments$mu + Xbeta
-    utility_moments$Sigma = A %*% tcrossprod(utility_moments$Sigma, A)
+    utility_moments$mu = A %*% utility_moments$mean + Xbeta
+    utility_moments$Sigma = A %*% tcrossprod(utility_moments$varcov, A)
   }
+
+  utility_moments$mean = NULL
+  utility_moments$EYY = NULL
+  utility_moments$varcov = NULL
 
   return(utility_moments)
 }
