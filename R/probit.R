@@ -124,124 +124,128 @@ mnp_probit = function(
       obs_set = sample(1:n_obs, size = floor(E_sample_rate * n_obs), replace = FALSE)
 
     # per observation computations ----
-    # obs_moments =
-    #   foreach(
-    #     i = obs_set,
-    #     # .errorhandling = 'pass'
-    #     # .inorder = TRUE
-    #     .combine = "list"
-    #   ) %dorng%
-    # # ) %do%
-    #   {
-    #     # print(paste0("doing obs ", i))
-    #     beta_e = beta
-    #     Sigma_e = Sigma
+    obs_moments =
+      foreach(
+        i = obs_set
+        # .errorhandling = 'pass'
+        # .inorder = TRUE
+        # .combine = "list"
+      ) %dorng%
+    # ) %do%
+      {
+        # print(paste0("doing obs ", i))
+        beta_e = beta
+        Sigma_e = Sigma
+
+        if (!is.null(true_beta))
+          beta_e = true_beta
+        if (!is.null(true_Sigma))
+          Sigma_e = true_Sigma
+
+        Xbeta = X[i, , ] %*% beta_e
+        y = Y[i]
+
+        A = constraints[[y]]
+
+        if (E_method == 'EP') {
+          # browser(expr = {i == 463})
+          utility_moments = mnp_ep_moments(Xbeta, Sigma_e, y, A, transform)
+        }
+        else if (E_method == "HMC") {
+          # browser(expr = {i == 45})
+          utility_moments = mnp_hmc_moments(Xbeta, Precision, y, A, n_mc)
+        }
+        else if (E_method == "LINESS")
+          utility_moments = mnp_ess_moments(Xbeta, Sigma_e, y, A, n_mc)
+        else if (E_method == "Gibbs")
+          utility_moments = mnp_gibbs_moments(Xbeta, Precision, y, A, n_mc)
+        else if (E_method == "MET")
+        {
+          utility_moments = mnp_met_moments(Xbeta, Sigma_e, y, A, n_mc)
+        }
+          else if (E_method == "MomTrunc")
+          {
+            utility_moments = mnp_momtrunc_moments(Xbeta, Sigma_e, y, A)
+          }
+        else
+          stop('Moments must be one of EP, HMC, Gibbs, or LINESS')
+
+        # accumulate m step quantities
+        # tXPrecision = crossprod(X[i, , ], Precision)
+        # gls_a = tXPrecision %*% X[i, , ]
+        # gls_b = tXPrecision %*% moments$mu
+        #
+        # # E[Z | -]
+        # E_sample_cov = moments$Sigma + tcrossprod(moments$mu - Xbeta)
+        #
+        # return(
+        #   list(
+        #     gls_a = gls_a,
+        #     gls_b = gls_b,
+        #     E_sample_cov = E_sample_cov
+        #   )
+        # )
+
+        # print(typeof(utility_moments))
+
+        # browser()
+
+        # browser(
+        #   expr = {typeof(utility_moments$mu) == "double"}
+        # )
+
+        # result_list = list(
+        #   mu = utility_moments$mu,
+        #   Sigma = utility_moments$Sigma
+        # )
+
+        # print(typeof(result_list))
+
+        # return(result_list)
+        return(utility_moments)
+      }
+
+    # obs_moments = vector(mode='list', length = length(obs_set))
+    # for (i in obs_set)
+    # {
+    #   beta_e = beta
+    #   Sigma_e = Sigma
     #
-    #     if (!is.null(true_beta))
-    #       beta_e = true_beta
-    #     if (!is.null(true_Sigma))
-    #       Sigma_e = true_Sigma
+    #   if (!is.null(true_beta))
+    #     beta_e = true_beta
+    #   if (!is.null(true_Sigma))
+    #     Sigma_e = true_Sigma
     #
-    #     Xbeta = X[i, , ] %*% beta_e
-    #     y = Y[i]
+    #   Xbeta = X[i, , ] %*% beta_e
+    #   y = Y[i]
     #
-    #     A = constraints[[y]]
+    #   A = constraints[[y]]
     #
-    #     if (E_method == 'EP') {
-    #       # browser(expr = {i == 463})
-    #       utility_moments = mnp_ep_moments(Xbeta, Sigma_e, y, A, transform)
-    #     }
-    #     else if (E_method == "HMC") {
-    #       # browser(expr = {i == 45})
-    #       utility_moments = mnp_hmc_moments(Xbeta, Precision, y, A, n_mc)
-    #     }
-    #     else if (E_method == "LINESS")
-    #       utility_moments = mnp_ess_moments(Xbeta, Sigma_e, y, A, n_mc)
-    #     else if (E_method == "Gibbs")
-    #       utility_moments = mnp_gibbs_moments(Xbeta, Precision, y, A, n_mc)
-    #     else if (E_method == "MET")
-    #     {
-    #       utility_moments = mnp_met_moments(Xbeta, Sigma_e, y, A, n_mc)
-    #     }
-    #     else
-    #       stop('Moments must be one of EP, HMC, Gibbs, or LINESS')
-    #
-    #     # accumulate m step quantities
-    #     # tXPrecision = crossprod(X[i, , ], Precision)
-    #     # gls_a = tXPrecision %*% X[i, , ]
-    #     # gls_b = tXPrecision %*% moments$mu
-    #     #
-    #     # # E[Z | -]
-    #     # E_sample_cov = moments$Sigma + tcrossprod(moments$mu - Xbeta)
-    #     #
-    #     # return(
-    #     #   list(
-    #     #     gls_a = gls_a,
-    #     #     gls_b = gls_b,
-    #     #     E_sample_cov = E_sample_cov
-    #     #   )
-    #     # )
-    #
-    #     # print(typeof(utility_moments))
-    #
-    #     # browser()
-    #
-    #     # browser(
-    #     #   expr = {typeof(utility_moments$mu) == "double"}
-    #     # )
-    #
-    #     # result_list = list(
-    #     #   mu = utility_moments$mu,
-    #     #   Sigma = utility_moments$Sigma
-    #     # )
-    #
-    #     # print(typeof(result_list))
-    #
-    #     # return(result_list)
-    #     return(utility_moments)
+    #   if (E_method == 'EP') {
+    #     # browser(expr = {i == 463})
+    #     utility_moments = mnp_ep_moments(Xbeta, Sigma_e, y, A, transform)
     #   }
-
-    obs_moments = vector(mode='list', length = length(obs_set))
-    for (i in obs_set)
-    {
-      beta_e = beta
-      Sigma_e = Sigma
-
-      if (!is.null(true_beta))
-        beta_e = true_beta
-      if (!is.null(true_Sigma))
-        Sigma_e = true_Sigma
-
-      Xbeta = X[i, , ] %*% beta_e
-      y = Y[i]
-
-      A = constraints[[y]]
-
-      if (E_method == 'EP') {
-        # browser(expr = {i == 463})
-        utility_moments = mnp_ep_moments(Xbeta, Sigma_e, y, A, transform)
-      }
-      else if (E_method == "HMC") {
-        # browser(expr = {i == 45})
-        utility_moments = mnp_hmc_moments(Xbeta, Precision, y, A, n_mc)
-      }
-      else if (E_method == "LINESS")
-        utility_moments = mnp_ess_moments(Xbeta, Sigma_e, y, A, n_mc)
-      else if (E_method == "Gibbs")
-        utility_moments = mnp_gibbs_moments(Xbeta, Precision, y, A, n_mc)
-      else if (E_method == "MET")
-      {
-        utility_moments = mnp_met_moments(Xbeta, Sigma_e, y, A, n_mc)
-      }
-      else if (E_method == "MomTrunc")
-      {
-        utility_moments = mnp_momtrunc_moments(Xbeta, Sigma_e, y, A)
-      }
-      else
-        stop('Moments must be one of EP, HMC, Gibbs, or LINESS')
-
-      obs_moments[[i]] = utility_moments
-    }
+    #   else if (E_method == "HMC") {
+    #     # browser(expr = {i == 45})
+    #     utility_moments = mnp_hmc_moments(Xbeta, Precision, y, A, n_mc)
+    #   }
+    #   else if (E_method == "LINESS")
+    #     utility_moments = mnp_ess_moments(Xbeta, Sigma_e, y, A, n_mc)
+    #   else if (E_method == "Gibbs")
+    #     utility_moments = mnp_gibbs_moments(Xbeta, Precision, y, A, n_mc)
+    #   else if (E_method == "MET")
+    #   {
+    #     utility_moments = mnp_met_moments(Xbeta, Sigma_e, y, A, n_mc)
+    #   }
+    #   else if (E_method == "MomTrunc")
+    #   {
+    #     utility_moments = mnp_momtrunc_moments(Xbeta, Sigma_e, y, A)
+    #   }
+    #   else
+    #     stop('Moments must be one of EP, HMC, Gibbs, MET, MomTrunc, or LINESS')
+    #
+    #   obs_moments[[i]] = utility_moments
+    # }
 
     # propagate updated values to outer environment
     # gls_a = E_obs_quantities$gls_a

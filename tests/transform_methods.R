@@ -10,7 +10,7 @@ n_choices = 4
 tol = 0.0005
 conv_metric = "precision"
 relerr_tol = .1
-max_iter = 500
+max_iter = 20
 
 # true parameters ----
 Prec_iden = .2 * diag(n_choices-1) + .8 * rep(1, n_choices-1) %*% t(rep(1, n_choices-1))
@@ -37,7 +37,8 @@ simdata = generate_custom_identified_choice_data(
 constraints = utility_shift_constraints(n_choices)
 
 # fit model ----
-# registerDoParallel(8)
+cl <- makeCluster(8) # Example: use all but one core
+registerDoParallel(cl)
 # registerDoSEQ()
 probit_ep =  mnp_probit(
   X = simdata$X, Y = simdata$Y,
@@ -60,6 +61,8 @@ probit_ep =  mnp_probit(
   transform=TRUE
 )
 
+# registerDoParallel(8)
+# registerDoSEQ()
 probit_momtrunc = mnp_probit(
   X = simdata$X, Y = simdata$Y,
   beta_init = coef_init,
