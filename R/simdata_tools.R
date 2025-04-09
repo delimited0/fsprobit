@@ -105,9 +105,7 @@ generate_identified_choice_data = function(
   #   covariates_iden[i, , ] = iden_mat %*% covariates[i, ,]
   # }
 
-  coefs = ifelse(include_intercept, as.matrix(c(1, coef_true)), coef_true)
-
-  relative_utilities = t(apply(covariates, 1, function(x) rmvnorm(1, as.matrix(x) %*% coefs, Sigma_iden)))
+  relative_utilities = t(apply(covariates, 1, function(x) rmvnorm(1, as.matrix(x) %*% coef_true, Sigma_iden)))
   Y = apply(relative_utilities, 1, function(z) {
     if (all(z < 0))
     {
