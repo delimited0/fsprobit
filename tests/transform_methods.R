@@ -9,7 +9,6 @@ n_choices = 4
 
 tol = 0.0005
 conv_metric = "precision"
-relerr_tol = .1
 max_iter = 20
 
 # true parameters ----

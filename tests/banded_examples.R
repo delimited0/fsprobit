@@ -7,8 +7,7 @@ n_obs = 2000
 n_choices = 4
 
 tol = .001
-conv_metric = "precision"
-relerr_tol = .1
+conv_metric = "beta_relative"
 max_iter = 500
 
 # true parameters ----
@@ -40,7 +39,7 @@ probit_trace_iden = mnp_probit(
   X = simdata$X, Y = simdata$Y,
   beta_init = coef_init,
   Sigma_init = Sigma_init,
-  E_method = "EP",
+  E_method = "MET",
   E_sample_rate = 1,
   M_method = "Newton",
   n_choices = n_choices,
@@ -48,6 +47,7 @@ probit_trace_iden = mnp_probit(
   tol = tol,
   newton_tol = 1e-3,
   max_newton_iter = 50,
+  n_mc = 200,
   max_iter = max_iter,
   conv_metric = conv_metric,
   shift_iden_method = "ref",

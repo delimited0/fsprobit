@@ -355,6 +355,10 @@ mnp_probit = function(
     {
       dmetric = max(abs(beta_new - beta_old))
     }
+    else if (conv_metric == "beta_relative")
+    {
+      dmetric = max(abs(beta_new - beta_old) / abs(beta_old))
+    }
     else
       stop("invalid convergence metric")
 
@@ -362,6 +366,7 @@ mnp_probit = function(
     {
       # print(paste0("EM iteration: ", iter))
       print(paste0("EM iteration: ", iter, ", M step bound: ", m_step_bound_new))
+      print(paste0("coefficient estimate: ", beta_new))
     }
 
     #### update parameters ####
@@ -406,6 +411,8 @@ mnp_probit = function(
     E_sample_rate = E_sample_rate,
     shift_iden_method = shift_iden_method,
     scale_iden_method = scale_iden_method,
-    time = elapsed$toc - elapsed$tic
+    time = elapsed$toc - elapsed$tic,
+    conv_metric = conv_metric,
+    tol = tol
   ))
 }
