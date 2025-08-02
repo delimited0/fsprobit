@@ -339,6 +339,13 @@ mnp_probit = function(
       # dmetric = max(abs(param_new - param_old) / abs(param_old))
       dmetric = max(abs(param_new - param_old))
     }
+    else if (conv_metric == "precision_relative")
+    {
+      param_new = c(Precision_new, beta_new)
+      param_old = c(Precision_old, beta_old)
+      # dmetric = max(abs(param_new - param_old) / abs(param_old))
+      dmetric = max(abs(param_new - param_old) / abs(param_old))
+    }
     else if (conv_metric == "covariance")
     {
       param_new = c(Sigma_new, beta_new)

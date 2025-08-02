@@ -5,21 +5,26 @@ library(MomTrunc)
 
 p = 1
 n_obs = 2000
-n_choices = 4
+n_choices = 25
 
-tol = 0.0005
-conv_metric = "precision"
-max_iter = 20
+# tol = 0.0005
+tol = 1e-2
+conv_metric = "beta_relative"
+max_iter = 300
 
 # true parameters ----
-Prec_iden = .2 * diag(n_choices-1) + .8 * rep(1, n_choices-1) %*% t(rep(1, n_choices-1))
-Sigma_iden = solve(Prec_iden)
+# Prec_iden = .2 * diag(n_choices-1) + .8 * rep(1, n_choices-1) %*% t(rep(1, n_choices-1))
+# Sigma_iden = solve(Prec_iden)
+Sigma_iden <- matrix(0.5, nrow = n_choices - 1, ncol = n_choices - 1)
+diag(Sigma_iden) <- 1
+Prec_iden <- solve(Sigma_iden)
 
-coef_true = as.matrix(c(2))
+# coef_true = as.matrix(c(2))
+coef_true = as.matrix(c(1,-1))
 
 # initial parameters
 Sigma_init = diag(n_choices-1)
-coef_init = as.matrix(c(.2))
+coef_init = as.matrix(c(.2, .2))
 
 # covariate mean and sd
 n_mean = 0
@@ -52,13 +57,67 @@ probit_ep =  mnp_probit(
   newton_tol = 1e-3,
   max_newton_iter = 50,
   max_iter = max_iter,
-  conv_metric = "beta",
+  conv_metric = conv_metric,
   shift_iden_method = "ref",
   scale_iden_method = "trace",
   verbose=5,
   record_history=TRUE,
   transform=TRUE
 )
+stopCluster(cl)
+
+cl <- makeCluster(8) # Example: use all but one core
+registerDoParallel(cl)
+probit_ep_untransform = mnp_probit(
+  X = simdata$X, Y = simdata$Y,
+  beta_init = coef_init,
+  Sigma_init = Sigma_init,
+  E_method = "EP",
+  E_sample_rate = 1,
+  M_method = "Newton",
+  n_choices = n_choices,
+  true_trace = sum(diag(Prec_iden)),
+  tol = tol,
+  newton_tol = 1e-3,
+  max_newton_iter = 50,
+  max_iter = max_iter,
+  conv_metric = "beta",
+  n_mc = 1000,
+  shift_iden_method = "ref",
+  scale_iden_method = "trace",
+  verbose=5,
+  record_history=TRUE,
+  transform=FALSE
+)
+stopCluster(cl)
+
+cl <- makeCluster(8) # Example: use all but one core
+registerDoParallel(cl)
+probit_hmc = mnp_probit(
+  X = simdata$X, Y = simdata$Y,
+  beta_init = coef_init,
+  Sigma_init = Sigma_init,
+  E_method = "HMC",
+  E_sample_rate = 1,
+  M_method = "Newton",
+  n_choices = n_choices,
+  true_trace = sum(diag(Prec_iden)),
+  tol = tol,
+  newton_tol = 1e-3,
+  max_newton_iter = 50,
+  max_iter = max_iter,
+  conv_metric = conv_metric,
+  n_mc = 1000,
+  shift_iden_method = "ref",
+  scale_iden_method = "trace",
+  verbose=5,
+  record_history=TRUE,
+  transform=FALSE
+)
+stopCluster(cl)
+
+
+
 
 # registerDoParallel(8)
 # registerDoSEQ()
