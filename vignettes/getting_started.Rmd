@@ -15,7 +15,7 @@ devtools::load_all(".")
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Basic usage of texttt{fprobit}
+# Basic usage of \texttt{fprobit}
 
 Load the package.
 
@@ -70,6 +70,7 @@ Now we fit the model to the data.
     E_method = "EP",
     E_sample_rate = 1,
     M_method = "Newton",
+    M_damping = .5,
     n_choices = n_choices,
     true_trace = sum(diag(Prec_iden)),
     tol = tol,

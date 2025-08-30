@@ -26,6 +26,7 @@ mnp_probit = function(
     E_sample_rate = 1,
     true_beta = NULL, true_Sigma = NULL,
     M_method = "Newton",
+    M_damping = 0,
     update_beta = TRUE,
     conv_metric = "precision",
     penalty = NULL,
@@ -314,57 +315,56 @@ mnp_probit = function(
       stop("Invalid m step method")
     }
 
-    m_step_bound_new = - (sum(diag(E_sample_cov %*% Precision_new)) + determinant(Precision_new)$modulus )
+    # m_step_bound_new = - (sum(diag(E_sample_cov %*% Precision_new)) + determinant(Precision_new)$modulus )
 
     # update parameters
-    beta = beta_new
-    Precision = Precision_new
-    Sigma = Sigma_new
-    m_step_bound = m_step_bound_new
+    beta = beta_new * (1 - M_damping) + M_damping * beta_old
+    Precision = Precision_new * (1 - M_damping) + M_damping * Precision_old
+    Sigma = Sigma_new * (1 - M_damping) + M_damping * Sigma_old
+    m_step_bound = - (sum(diag(E_sample_cov %*% Precision)) + determinant(Precision)$modulus )
 
     #### record history ####
     if (record_history)
     {
-      llik[iter] = m_step_bound_new
-      beta_history[iter+1, ] = beta_new
-      Sigma_history[iter+1, , ] = Sigma_new
-      Prec_history[iter+1, , ] = Precision_new
+      llik[iter] = m_step_bound
+      beta_history[iter+1, ] = beta
+      Sigma_history[iter+1, , ] = Sigma
+      Prec_history[iter+1, , ] = Precision
     }
 
     #### update convergence ####
     if (conv_metric == "precision")
     {
-      param_new = c(Precision_new, beta_new)
+      param_new = c(Precision, beta)
       param_old = c(Precision_old, beta_old)
       # dmetric = max(abs(param_new - param_old) / abs(param_old))
       dmetric = max(abs(param_new - param_old))
     }
     else if (conv_metric == "precision_relative")
     {
-      param_new = c(Precision_new, beta_new)
+      param_new = c(Precision, beta)
       param_old = c(Precision_old, beta_old)
       # dmetric = max(abs(param_new - param_old) / abs(param_old))
       dmetric = max(abs(param_new - param_old) / abs(param_old))
     }
     else if (conv_metric == "covariance")
     {
-      param_new = c(Sigma_new, beta_new)
+      param_new = c(Sigma, beta)
       param_old = c(Sigma_old, beta_old)
       # dmetric = max(abs(param_new  - param_old) / abs(param_old))
       dmetric = max(abs(param_new - param_old))
     }
     else if (conv_metric == "mbound")
     {
-      dmetric = abs(m_step_bound_new - m_step_bound_old)
-      m_step_bound = m_step_bound_new
+      dmetric = abs(m_step_bound - m_step_bound_old)
     }
     else if (conv_metric == "beta")
     {
-      dmetric = max(abs(beta_new - beta_old))
+      dmetric = max(abs(beta - beta_old))
     }
     else if (conv_metric == "beta_relative")
     {
-      dmetric = max(abs(beta_new - beta_old) / abs(beta_old))
+      dmetric = max(abs(beta - beta_old) / abs(beta_old))
     }
     else
       stop("invalid convergence metric")
@@ -372,14 +372,14 @@ mnp_probit = function(
     if (iter %% verbose == 0)
     {
       # print(paste0("EM iteration: ", iter))
-      print(paste0("EM iteration: ", iter, ", M step bound: ", m_step_bound_new))
-      print(paste0("coefficient estimate: ", beta_new))
+      print(paste0("EM iteration: ", iter, ", M step bound: ", m_step_bound))
+      print(paste0("coefficient estimate: ", beta))
     }
 
     #### update parameters ####
     iter = iter + 1
-    beta = beta_new
-    Sigma = Sigma_new
+    # beta = beta_new
+    # Sigma = Sigma_new
     # Precision = Precision_new
 
     if (!isSymmetric.matrix(Sigma))

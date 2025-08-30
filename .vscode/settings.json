@@ -1,0 +1,16 @@
+{
+    "r.plot.useHttpgd": true,
+    "r.rterm.option": [
+        "--no-save",
+        "--no-restore",
+        "--quiet"
+    ],
+    "r.sessionWatcher": true,
+    "r.rtermSendDelay": 0,
+    "r.bracketedPaste": true,
+    "r.plot.defaults": {
+        "height": 480,
+        "width": 480,
+        "pointsize": 12
+    }
+}

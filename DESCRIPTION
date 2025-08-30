@@ -10,6 +10,6 @@ License: MIT I guess
 Encoding: UTF-8
 LazyData: true
 Imports: Rcpp (>= 1.0.12), tmg, tictoc, doParallel, mvtnorm, epmgpr, CVXR
-Depends: doRNG, epmgpr, mvtnorm
+Depends: doRNG, epmgpr, mvtnorm, CVXR
 LinkingTo: Rcpp
 VignetteBuilder: knitr

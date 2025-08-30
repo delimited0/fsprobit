@@ -3,15 +3,39 @@ library(mvtnorm)
 library(CVXR)
 
 #' generate latent utilties for mnp choice model
-#' @param means n observations x p features matrix of individual utility means
-#' @param m choices x m choices precision matrix of utility
+#' @param means n observations x m choices matrix of individual utility means
+#' @param precision m choices x m choices precision matrix of utility
 rchoicemvn = function(means, precision)
 {
-  p = ncol(means)
-  n = nrow(means)
-  Z = matrix(rnorm(p*n), nrow = n, ncol = p)
+  m = ncol(means)  # number of choices
+  n = nrow(means)  # number of observations
+  Z = matrix(rnorm(m*n), nrow = m, ncol = n)
   U = chol(precision)
-  backsolve(U, Z)
+  UinvZ = backsolve(U, Z)
+  t(UinvZ + t(means))
+}
+
+#' Fast vectorized multivariate normal generation with observation-specific means
+#' @param means matrix of means (n_obs x n_vars)
+#' @param sigma covariance matrix (n_vars x n_vars)
+#' @param n_obs number of observations
+#' @param n_vars number of variables
+fast_mvrnorm = function(means, sigma, n_obs = NULL, n_vars = NULL) {
+  if (is.null(n_obs)) n_obs = nrow(means)
+  if (is.null(n_vars)) n_vars = ncol(means)
+  
+  # Generate standard normal random variables
+  Z = matrix(rnorm(n_obs * n_vars), nrow = n_vars, ncol = n_obs)
+  
+  # Cholesky decomposition (computed once)
+  L = chol(sigma)
+  
+  # Transform: L %*% Z + means^T
+  # L %*% Z gives us the correlated random variables
+  # Adding t(means) broadcasts the observation-specific means
+  result = t(L) %*% Z + t(means)
+  
+  return(t(result))  # Return as n_obs x n_vars
 }
 
 # simulate latent utility with given covariance
@@ -44,15 +68,23 @@ generate_choice_data = function(
                     "choice" = paste0("choice_", 1:n_choices),
                     "covariate" = paste0("covariate_", 1:p))
   )
-  Z = t(apply(X, 1,
-              function(x) rmvnorm(1, as.matrix(x) %*% coef_true, Sigma_true))
-  )
+  
+  # Vectorized mean calculation: compute X[i,,] %*% coef_true for all i
+  # Reshape X to (n_obs * n_choices, p) for matrix multiplication
+  X_reshaped = matrix(X, nrow = n_obs * n_choices, ncol = p)
+  means_flat = X_reshaped %*% coef_true
+  # Reshape back to (n_obs, n_choices)
+  means = matrix(means_flat, nrow = n_obs, ncol = n_choices)
+  
+  # Use fast vectorized multivariate normal generation
+  Z = fast_mvrnorm(means, Sigma_true)
+  
   Y = apply(Z, 1, function(z) {
     return(which.max(z))
   })
   Y_cat = factor(Y, levels = 1:n_choices)
 
-  # identification transforms
+  # Vectorized identification transforms
   X_iden = array(NA, dim = c(n_obs, n_choices-1, p))
   iden_mat = cbind(-1, diag(n_choices-1))
   for (i in 1:n_obs) {
@@ -98,14 +130,16 @@ generate_identified_choice_data = function(
                     "covariate" = paste0("covariate_", 1:p))
   )
 
-  # identification transforms for covariates
-  # covariates_iden = array(NA, dim = c(n_obs, n_choices-1, p))
-  # iden_mat = cbind(-1, diag(n_choices-1))
-  # for (i in 1:n_obs) {
-  #   covariates_iden[i, , ] = iden_mat %*% covariates[i, ,]
-  # }
-
-  relative_utilities = t(apply(covariates, 1, function(x) rmvnorm(1, as.matrix(x) %*% coef_true, Sigma_iden)))
+  # Vectorized mean calculation for relative utilities
+  # Reshape covariates to (n_obs * (n_choices-1), p) for matrix multiplication
+  covariates_reshaped = matrix(covariates, nrow = n_obs * (n_choices-1), ncol = p)
+  means_flat = covariates_reshaped %*% coef_true
+  # Reshape back to (n_obs, n_choices-1)
+  means = matrix(means_flat, nrow = n_obs, ncol = n_choices-1)
+  
+  # Use fast vectorized multivariate normal generation
+  relative_utilities = fast_mvrnorm(means, Sigma_iden)
+  
   Y = apply(relative_utilities, 1, function(z) {
     if (all(z < 0))
     {
@@ -122,7 +156,6 @@ generate_identified_choice_data = function(
     X = covariates,
     Z_rel = relative_utilities,
     Y_cat = Y_cat
-    # X_iden = covariates_iden
   )
 }
 
@@ -143,7 +176,7 @@ generate_custom_identified_choice_data = function(
 
   n_choices = nrow(Sigma_iden)+1
 
-  # simulate covariates from uniform in original dimension
+  # simulate covariates from custom sampler
   set.seed(seed)
   covariates = array(
     data = sampler(n = n_obs * (n_choices-1) * p),
@@ -153,14 +186,16 @@ generate_custom_identified_choice_data = function(
                     "covariate" = paste0("covariate_", 1:p))
   )
 
-  # identification transforms for covariates
-  # covariates_iden = array(NA, dim = c(n_obs, n_choices-1, p))
-  # iden_mat = cbind(-1, diag(n_choices-1))
-  # for (i in 1:n_obs) {
-  #   covariates_iden[i, , ] = iden_mat %*% covariates[i, ,]
-  # }
-
-  relative_utilities = t(apply(covariates, 1, function(x) rmvnorm(1, as.matrix(x) %*% coef_true, Sigma_iden)))
+  # Vectorized mean calculation for relative utilities
+  # Reshape covariates to (n_obs * (n_choices-1), p) for matrix multiplication
+  covariates_reshaped = matrix(covariates, nrow = n_obs * (n_choices-1), ncol = p)
+  means_flat = covariates_reshaped %*% coef_true
+  # Reshape back to (n_obs, n_choices-1)
+  means = matrix(means_flat, nrow = n_obs, ncol = n_choices-1)
+  
+  # Use fast vectorized multivariate normal generation
+  relative_utilities = fast_mvrnorm(means, Sigma_iden)
+  
   Y = apply(relative_utilities, 1, function(z) {
     if (all(z < 0))
     {
@@ -177,7 +212,6 @@ generate_custom_identified_choice_data = function(
     X = covariates,
     Z_rel = relative_utilities,
     Y_cat = Y_cat
-    # X_iden = covariates_iden
   )
 }
 
@@ -219,13 +253,15 @@ generate_target_identified_choice_data = function(
                     "covariate" = paste0("covariate_", 1:p))
   )
 
-  means = apply(covariates, 1, function(x) x %*% coef_true)
+  # Vectorized mean calculation: compute covariates[i,,] %*% coef_true for all i
+  # Reshape covariates to (n_obs * n_choices, p) for matrix multiplication
+  covariates_reshaped = matrix(covariates, nrow = n_obs * n_choices, ncol = p)
+  means_flat = covariates_reshaped %*% coef_true
+  # Reshape back to (n_obs, n_choices)
+  means = matrix(means_flat, nrow = n_obs, ncol = n_choices)
 
-  # sample the utilities given means and precision
-  Z = matrix(rnorm(n_obs * n_choices), nrow = n_choices, ncol = n_obs)
-  U = chol(Prec_not_iden)
-  UinvZ <- backsolve(U, Z)
-  utilities = t(UinvZ + means)
+  # Use optimized rchoicemvn function for precision-based sampling
+  utilities = rchoicemvn(means, Prec_not_iden)
 
   Y = apply(utilities, 1, function(z) {
     return(which.max(z))

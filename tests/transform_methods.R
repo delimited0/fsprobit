@@ -38,6 +38,15 @@ simdata = generate_custom_identified_choice_data(
   seed = 1
 )
 
+x_range = c(-1, 1)
+simdata = generate_identified_choice_data(
+  n_obs = n_obs,
+  x_range = x_range,
+  coef_true = coef_true,
+  Sigma_iden = Sigma_iden,
+  seed = 1
+)
+
 constraints = utility_shift_constraints(n_choices)
 
 # fit model ----

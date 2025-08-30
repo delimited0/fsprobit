@@ -2,14 +2,18 @@ library(fsprobit)
 library(mvtnorm)
 library(ggplot2)
 library(data.table)
+library(doParallel)
 
 # Simulation Parameters
-n_choices <- 25
-n_obs <- 2000
+n_choices <- 5
+# n_prec_params = (n_choices - 1) * (n_choices - 2) / 2
+# n_per_choice = 150
+# n_obs <- n_prec_params * n_per_choice 
 max_iter = 500
 tol = 1e-3
+n_obs = 25000
 
-newton_tol = 1e-2
+newton_tol = 1e-3
 max_newton_iter = 50
 
 # True Covariance/Precision Matrix (Compound Symmetric)
@@ -34,8 +38,16 @@ simdata <- generate_custom_identified_choice_data(
 conv_metric = "precision"
 
 # Initial parameters for the model
-sigma_init <- diag(n_choices - 1)
-coef_init <- as.matrix(c(0, 0))
+# sigma_init <- diag(n_choices - 1)
+# coef_init <- as.matrix(c(0, 0))
+# Generate a random positive definite matrix for sigma_init
+d <- n_choices - 1
+A <- matrix(rnorm(d^2), d, d)
+sigma_init <- A %*% t(A)
+
+# Randomly initialize coefficients
+coef_init <- as.matrix(rnorm(2))
+
 
 cl <- makeCluster(8) # Example: use all but one core
 registerDoParallel(cl)
@@ -46,7 +58,8 @@ probit_ep_transformed <- mnp_probit(
   beta_init = coef_init,
   Sigma_init = sigma_init,
   E_method = "EP",
-  M_method = "Newton",
+  M_method = "CVX",
+  M_damping = 0,
   n_choices = n_choices,
   true_trace = sum(diag(Prec_iden)),
   tol = tol,
@@ -62,6 +75,76 @@ probit_ep_transformed <- mnp_probit(
 )
 stopCluster(cl)
 
+# cl <- makeCluster(8) # Example: use all but one core
+# registerDoParallel(cl)
+# probit_ep_nottransformed <- mnp_probit(
+#   X = simdata$X, Y = simdata$Y,
+#   beta_init = coef_init,
+#   Sigma_init = sigma_init,
+#   E_method = "EP",
+#   M_method = "CVX",
+#   M_damping = 0,
+#   n_choices = n_choices,
+#   true_trace = sum(diag(Prec_iden)),
+#   tol = tol,
+#   max_iter = max_iter,
+#   newton_tol = newton_tol,
+#   max_newton_iter = max_newton_iter,
+#   shift_iden_method = "ref",
+#   scale_iden_method = "trace",
+#   verbose = 5,
+#   record_history = TRUE,
+#   conv_metric = conv_metric,
+#   transform = FALSE
+# )
+# stopCluster(cl)
+
+plot(probit_ep_transformed$llik)
+
+plot(probit_ep_transformed$beta_history[, 1])
+lines(probit_ep_nottransformed$beta_history[, 1], col = "red")
+plot(probit_ep_transformed$Prec_history[,1,3])
+
+# Create a plot that overlays the convergence of all off-diagonal precision elements
+
+# Extract the history of the precision matrix
+prec_history_transformed <- probit_ep_transformed$Prec_history
+n_iter <- dim(prec_history_transformed)[1]
+d <- dim(prec_history_transformed)[2]
+
+# Get the indices of the upper triangle for off-diagonal elements
+off_diag_indices <- which(upper.tri(matrix(nrow = d, ncol = d)), arr.ind = TRUE)
+
+# Prepare the data for ggplot
+# Create a list of data.tables for each off-diagonal element's history
+history_list_all_offdiag <- lapply(1:nrow(off_diag_indices), function(k) {
+  i <- off_diag_indices[k, "row"]
+  j <- off_diag_indices[k, "col"]
+  data.table(
+    iteration = 1:n_iter,
+    value = prec_history_transformed[, i, j],
+    element = paste0("Prec[", i, ",", j, "]")
+  )
+})
+
+# Combine the list into a single data.table
+history_df_all_offdiag <- rbindlist(history_list_all_offdiag)
+
+# Create the ggplot
+off_diag_convergence_plot <- ggplot(history_df_all_offdiag, aes(x = iteration, y = value, group = element)) +
+  geom_line(alpha = 0.4) +
+  geom_hline(yintercept = Prec_iden[1,2], color = "red", linetype = "dashed", size = 1) +
+  labs(
+    title = "Convergence of Off-Diagonal Precision Elements (Transformed)",
+    subtitle = paste("True off-diagonal value =", Prec_iden[1,2]),
+    x = "Iteration",
+    y = "Estimated Precision Value"
+  ) +
+  scale_y_continuous(limits = c(-1, 1)) +
+  theme_bw() 
+
+# Print the plot
+print(off_diag_convergence_plot)
 
 cl <- makeCluster(8) # Example: use all but one core
 registerDoParallel(cl)

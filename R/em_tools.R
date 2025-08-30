@@ -264,7 +264,7 @@ Prec_cvx_estimation = function(
 )
 {
   m = dim(E_sample_cov)[1]
-  Prec = Variable(m, m, PSD=TRUE)
+  Prec = Variable(c(m, m), PSD=TRUE)
   objective = log_det(Prec) - matrix_trace(Prec %*% E_sample_cov)
   if (scale_iden_method == "topleft")
   {

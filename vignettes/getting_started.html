@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Getting started with fsprobit</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Getting started with fsprobit</h1>
+
+
+
+<div id="basic-usage-of-textttfprobit" class="section level1">
+<h1>Basic usage of texttt{fprobit}</h1>
+<p>Load the package.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(fsprobit)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(mvtnorm)</span></code></pre></div>
+<p>Simulate some example data. We use the included data simulation
+function.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>p <span class="ot">=</span> <span class="dv">1</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>n_obs <span class="ot">=</span> <span class="dv">2000</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>n_choices <span class="ot">=</span> <span class="dv">4</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>tol <span class="ot">=</span> .<span class="dv">001</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>conv_metric <span class="ot">=</span> <span class="st">&quot;precision&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>relerr_tol <span class="ot">=</span> .<span class="dv">1</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>max_iter <span class="ot">=</span> <span class="dv">500</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co"># true parameters</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>Prec_iden <span class="ot">=</span> .<span class="dv">2</span> <span class="sc">*</span> <span class="fu">diag</span>(n_choices<span class="dv">-1</span>) <span class="sc">+</span> .<span class="dv">8</span> <span class="sc">*</span> <span class="fu">rep</span>(<span class="dv">1</span>, n_choices<span class="dv">-1</span>) <span class="sc">%*%</span> <span class="fu">t</span>(<span class="fu">rep</span>(<span class="dv">1</span>, n_choices<span class="dv">-1</span>))</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>Sigma_iden <span class="ot">=</span> <span class="fu">solve</span>(Prec_iden)</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>coef_true <span class="ot">=</span> <span class="fu">as.matrix</span>(<span class="fu">c</span>(<span class="dv">2</span>))</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co"># initial parameters</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>Sigma_init <span class="ot">=</span> <span class="fu">diag</span>(n_choices<span class="dv">-1</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>coef_init <span class="ot">=</span> <span class="fu">as.matrix</span>(<span class="fu">c</span>(.<span class="dv">2</span>))</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co"># covariate mean and sd</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>n_mean <span class="ot">=</span> <span class="dv">0</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>n_sd <span class="ot">=</span> <span class="dv">1</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>simdata <span class="ot">=</span> <span class="fu">generate_custom_identified_choice_data</span>(</span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>  <span class="at">n_obs =</span> n_obs,</span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>  <span class="at">sampler =</span> <span class="cf">function</span>(n) <span class="fu">rnorm</span>(n, <span class="at">mean=</span>n_mean, <span class="at">sd=</span>n_sd), </span>
+<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a>  <span class="at">coef_true =</span> coef_true,</span>
+<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a>  <span class="at">Sigma_iden =</span> <span class="fu">solve</span>(Prec_iden),</span>
+<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">1</span></span>
+<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a>)</span></code></pre></div>
+<p>Now we fit the model to the data.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>  probit_trace_iden <span class="ot">=</span> <span class="fu">mnp_probit</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>    <span class="at">X =</span> simdata<span class="sc">$</span>X, <span class="at">Y =</span> simdata<span class="sc">$</span>Y,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>    <span class="at">beta_init =</span> coef_init,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>    <span class="at">Sigma_init =</span> Sigma_init,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    <span class="at">E_method =</span> <span class="st">&quot;EP&quot;</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>    <span class="at">E_sample_rate =</span> <span class="dv">1</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    <span class="at">M_method =</span> <span class="st">&quot;Newton&quot;</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>    <span class="at">M_damping =</span> .<span class="dv">5</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>    <span class="at">n_choices =</span> n_choices,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    <span class="at">true_trace =</span> <span class="fu">sum</span>(<span class="fu">diag</span>(Prec_iden)),</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>    <span class="at">tol =</span> tol,</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>    <span class="at">newton_tol =</span> <span class="fl">1e-3</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>    <span class="at">max_newton_iter =</span> <span class="dv">50</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>    <span class="at">max_iter =</span> max_iter,</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>    <span class="at">conv_metric =</span> conv_metric,</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>    <span class="at">shift_iden_method =</span> <span class="st">&quot;ref&quot;</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>    <span class="at">scale_iden_method =</span> <span class="st">&quot;trace&quot;</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>    <span class="at">verbose=</span><span class="dv">5</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>  )</span></code></pre></div>
+<pre><code>## Warning: executing %dopar% sequentially: no parallel backend registered</code></pre>
+<pre><code>## [1] &quot;EM iteration: 5, M step bound: -2.80433441618446&quot;
+## [1] &quot;coefficient estimate: 0.573829967272699&quot;
+## [1] &quot;EM iteration: 10, M step bound: -2.87551858510467&quot;
+## [1] &quot;coefficient estimate: 0.740215347239559&quot;
+## [1] &quot;EM iteration: 15, M step bound: -2.90554830685356&quot;
+## [1] &quot;coefficient estimate: 0.831699335278245&quot;
+## [1] &quot;EM iteration: 20, M step bound: -2.90881562611074&quot;
+## [1] &quot;coefficient estimate: 0.88900767610398&quot;
+## [1] &quot;EM iteration: 25, M step bound: -2.89623718879517&quot;
+## [1] &quot;coefficient estimate: 0.928886309743524&quot;
+## [1] &quot;EM iteration: 30, M step bound: -2.87493929518473&quot;
+## [1] &quot;coefficient estimate: 0.959171268543753&quot;
+## [1] &quot;EM iteration: 35, M step bound: -2.8493123902011&quot;
+## [1] &quot;coefficient estimate: 0.983784449730318&quot;
+## [1] &quot;EM iteration: 40, M step bound: -2.82191247442306&quot;
+## [1] &quot;coefficient estimate: 1.00478360741435&quot;
+## [1] &quot;EM iteration: 45, M step bound: -2.79416939634363&quot;
+## [1] &quot;coefficient estimate: 1.02329991163085&quot;
+## [1] &quot;EM iteration: 50, M step bound: -2.7668365413826&quot;
+## [1] &quot;coefficient estimate: 1.03998901593907&quot;
+## [1] &quot;EM iteration: 55, M step bound: -2.7402852819474&quot;
+## [1] &quot;coefficient estimate: 1.05525509550294&quot;
+## [1] &quot;EM iteration: 60, M step bound: -2.7146772042423&quot;
+## [1] &quot;coefficient estimate: 1.06936421158393&quot;
+## [1] &quot;EM iteration: 65, M step bound: -2.69006193378441&quot;
+## [1] &quot;coefficient estimate: 1.08250293796351&quot;
+## [1] &quot;EM iteration: 70, M step bound: -2.66643134757965&quot;
+## [1] &quot;coefficient estimate: 1.09480952612185&quot;
+## [1] &quot;EM iteration: 75, M step bound: -2.64374905784963&quot;
+## [1] &quot;coefficient estimate: 1.10639106259811&quot;
+## [1] &quot;EM iteration: 80, M step bound: -2.62196619379575&quot;
+## [1] &quot;coefficient estimate: 1.11733333485392&quot;
+## [1] &quot;EM iteration: 85, M step bound: -2.60102970181934&quot;
+## [1] &quot;coefficient estimate: 1.12770679952409&quot;
+## [1] &quot;EM iteration: 90, M step bound: -2.58088660023505&quot;
+## [1] &quot;coefficient estimate: 1.13757039490105&quot;
+## [1] &quot;EM iteration: 95, M step bound: -2.56148606287726&quot;
+## [1] &quot;coefficient estimate: 1.14697411018858&quot;
+## [1] &quot;EM iteration: 100, M step bound: -2.54278034693344&quot;
+## [1] &quot;coefficient estimate: 1.155960802589&quot;
+## [1] &quot;EM iteration: 105, M step bound: -2.52472511281048&quot;
+## [1] &quot;coefficient estimate: 1.16456753558088&quot;
+## [1] &quot;EM iteration: 110, M step bound: -2.50727943104155&quot;
+## [1] &quot;coefficient estimate: 1.17282659687432&quot;
+## [1] &quot;EM iteration: 115, M step bound: -2.49040563492234&quot;
+## [1] &quot;coefficient estimate: 1.18076629222791&quot;
+## [1] &quot;EM iteration: 120, M step bound: -2.47406910364079&quot;
+## [1] &quot;coefficient estimate: 1.18841157637007&quot;
+## [1] &quot;EM iteration: 125, M step bound: -2.45823802110526&quot;
+## [1] &quot;coefficient estimate: 1.19578456185958&quot;
+## [1] &quot;EM iteration: 130, M step bound: -2.44288313385568&quot;
+## [1] &quot;coefficient estimate: 1.20290493428672&quot;
+## [1] &quot;EM iteration: 135, M step bound: -2.42797751974534&quot;
+## [1] &quot;coefficient estimate: 1.209790294276&quot;
+## [1] &quot;EM iteration: 140, M step bound: -2.41349637285591&quot;
+## [1] &quot;coefficient estimate: 1.21645644143642&quot;
+## [1] &quot;EM iteration: 145, M step bound: -2.39941680645964&quot;
+## [1] &quot;coefficient estimate: 1.22291761176686&quot;
+## [1] &quot;EM iteration: 150, M step bound: -2.38571767428256&quot;
+## [1] &quot;coefficient estimate: 1.22918667737434&quot;
+## [1] &quot;EM iteration: 155, M step bound: -2.37237940909983&quot;
+## [1] &quot;coefficient estimate: 1.23527531544719&quot;
+## [1] &quot;EM iteration: 160, M step bound: -2.35938387758004&quot;
+## [1] &quot;coefficient estimate: 1.24119415195324&quot;
+## [1] &quot;EM iteration: 165, M step bound: -2.34671424990331&quot;
+## [1] &quot;coefficient estimate: 1.24695288445482&quot;
+## [1] &quot;EM iteration: 170, M step bound: -2.33435488267604&quot;
+## [1] &quot;coefficient estimate: 1.25256038754943&quot;
+## [1] &quot;EM iteration: 175, M step bound: -2.3222912138896&quot;
+## [1] &quot;coefficient estimate: 1.25802480379646&quot;
+## [1] &quot;EM iteration: 180, M step bound: -2.31050966857243&quot;
+## [1] &quot;coefficient estimate: 1.26335362243993&quot;
+## [1] &quot;EM iteration: 185, M step bound: -2.29899757398193&quot;
+## [1] &quot;coefficient estimate: 1.2685537478443&quot;
+## [1] &quot;EM iteration: 190, M step bound: -2.28774308333933&quot;
+## [1] &quot;coefficient estimate: 1.27363155920181&quot;
+## 53.651 sec elapsed
+## [1] &quot;Total iterations: 193&quot;</code></pre>
+<p>Check the result:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>probit_trace_iden<span class="sc">$</span>Precision</span></code></pre></div>
+<pre><code>##           [,1]      [,2]      [,3]
+## [1,] 1.0237325 0.5270088 0.5051074
+## [2,] 0.5270088 1.0465445 0.4737696
+## [3,] 0.5051074 0.4737696 0.9297233</code></pre>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
