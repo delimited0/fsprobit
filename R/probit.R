@@ -152,6 +152,9 @@ mnp_probit = function(
           # browser(expr = {i == 463})
           utility_moments = mnp_ep_moments(Xbeta, Sigma_e, y, A, transform)
         }
+        else if (E_method == "EPMNP") {
+          utility_moments = mnp_epmnp_moments(Xbeta, Sigma_e, y)
+        }
         else if (E_method == "HMC") {
           # browser(expr = {i == 45})
           utility_moments = mnp_hmc_moments(Xbeta, Precision, y, A, n_mc)
@@ -169,7 +172,7 @@ mnp_probit = function(
             utility_moments = mnp_momtrunc_moments(Xbeta, Sigma_e, y, A)
           }
         else
-          stop('Moments must be one of EP, HMC, Gibbs, or LINESS')
+          stop('Moments must be one of EP, EPMNP, HMC, Gibbs, MET, MomTrunc, or LINESS')
 
         # accumulate m step quantities
         # tXPrecision = crossprod(X[i, , ], Precision)
@@ -369,7 +372,7 @@ mnp_probit = function(
     else
       stop("invalid convergence metric")
 
-    if (iter %% verbose == 0)
+    if (verbose != 0 && iter %% verbose == 0)
     {
       # print(paste0("EM iteration: ", iter))
       print(paste0("EM iteration: ", iter, ", M step bound: ", m_step_bound))

@@ -81,6 +81,12 @@ mnp_ep_moments = function(Xbeta, Sigma, y, A, transform = FALSE)
   return(utility_moments)
 }
 
+mnp_epmnp_moments = function(Xbeta, Sigma, y)
+{
+  choice_index = as.integer(y) - 1
+  epmnp(as.vector(Xbeta), Sigma, choice_index)
+}
+
 mnp_hmc_moments = function(Xbeta, Precision, y, A, n_mc)
 {
   m = nrow(Xbeta)

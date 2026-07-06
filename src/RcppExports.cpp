@@ -10,6 +10,19 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// epmnp
+List epmnp(NumericVector mu, NumericMatrix Sigma, int choice_index);
+RcppExport SEXP _fsprobit_epmnp(SEXP muSEXP, SEXP SigmaSEXP, SEXP choice_indexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Sigma(SigmaSEXP);
+    Rcpp::traits::input_parameter< int >::type choice_index(choice_indexSEXP);
+    rcpp_result_gen = Rcpp::wrap(epmnp(mu, Sigma, choice_index));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_hello
 List rcpp_hello();
 RcppExport SEXP _fsprobit_rcpp_hello() {
@@ -22,6 +35,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_fsprobit_epmnp", (DL_FUNC) &_fsprobit_epmnp, 3},
     {"_fsprobit_rcpp_hello", (DL_FUNC) &_fsprobit_rcpp_hello, 0},
     {NULL, NULL, 0}
 };
