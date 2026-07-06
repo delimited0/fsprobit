@@ -5,13 +5,13 @@ library(data.table)
 library(doParallel)
 
 # Simulation Parameters
-n_choices <- 5
+n_choices <- 100
 # n_prec_params = (n_choices - 1) * (n_choices - 2) / 2
 # n_per_choice = 150
 # n_obs <- n_prec_params * n_per_choice 
 max_iter = 500
 tol = 1e-3
-n_obs = 25000
+n_obs = 10000
 
 newton_tol = 1e-3
 max_newton_iter = 50
@@ -45,6 +45,8 @@ d <- n_choices - 1
 A <- matrix(rnorm(d^2), d, d)
 sigma_init <- A %*% t(A)
 
+sigma_init = diag(n_choices-1)
+
 # Randomly initialize coefficients
 coef_init <- as.matrix(rnorm(2))
 
@@ -52,13 +54,15 @@ coef_init <- as.matrix(rnorm(2))
 cl <- makeCluster(8) # Example: use all but one core
 registerDoParallel(cl)
 
+# registerDoSEQ()
+
 # Fit Model 1: With transform
 probit_ep_transformed <- mnp_probit(
   X = simdata$X, Y = simdata$Y,
   beta_init = coef_init,
   Sigma_init = sigma_init,
   E_method = "EP",
-  M_method = "CVX",
+  M_method = "Newton",
   M_damping = 0,
   n_choices = n_choices,
   true_trace = sum(diag(Prec_iden)),
@@ -75,29 +79,29 @@ probit_ep_transformed <- mnp_probit(
 )
 stopCluster(cl)
 
-# cl <- makeCluster(8) # Example: use all but one core
-# registerDoParallel(cl)
-# probit_ep_nottransformed <- mnp_probit(
-#   X = simdata$X, Y = simdata$Y,
-#   beta_init = coef_init,
-#   Sigma_init = sigma_init,
-#   E_method = "EP",
-#   M_method = "CVX",
-#   M_damping = 0,
-#   n_choices = n_choices,
-#   true_trace = sum(diag(Prec_iden)),
-#   tol = tol,
-#   max_iter = max_iter,
-#   newton_tol = newton_tol,
-#   max_newton_iter = max_newton_iter,
-#   shift_iden_method = "ref",
-#   scale_iden_method = "trace",
-#   verbose = 5,
-#   record_history = TRUE,
-#   conv_metric = conv_metric,
-#   transform = FALSE
-# )
-# stopCluster(cl)
+cl <- makeCluster(8) # Example: use all but one core
+registerDoParallel(cl)
+probit_ep_nottransformed <- mnp_probit(
+  X = simdata$X, Y = simdata$Y,
+  beta_init = coef_init,
+  Sigma_init = sigma_init,
+  E_method = "EP",
+  M_method = "Newton",
+  M_damping = 0,
+  n_choices = n_choices,
+  true_trace = sum(diag(Prec_iden)),
+  tol = tol,
+  max_iter = max_iter,
+  newton_tol = newton_tol,
+  max_newton_iter = max_newton_iter,
+  shift_iden_method = "ref",
+  scale_iden_method = "trace",
+  verbose = 5,
+  record_history = TRUE,
+  conv_metric = conv_metric,
+  transform = FALSE
+)
+stopCluster(cl)
 
 plot(probit_ep_transformed$llik)
 

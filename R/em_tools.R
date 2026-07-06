@@ -5,6 +5,7 @@ library(tmvtnorm)
 library(tmg)
 library(MomTrunc)
 
+
 #' Compute per observation 1st and 2nd moments for multinomial probit
 #' Input can be subset of observations. Elements of X, y, and constraints must
 #' correspond to same observations.
@@ -40,17 +41,22 @@ mnp_ep_moments = function(Xbeta, Sigma, y, A, transform = FALSE)
       ub = rep(Inf, m)
 
       # transform to axis aligned
-      AXbeta = A %*% Xbeta
+      # AXbeta = A %*% Xbeta
+      AXbeta = vec_relative_choice(y, AXbeta)
+      # browser()
       utility_moments = epmgpr::moments(
         lb = -AXbeta,
         ub = ub,
         mu = rep(0, m),
-        Sigma = A %*% tcrossprod(Sigma, A)
+        # Sigma = A %*% tcrossprod(Sigma, A)
+        Sigma = sandwich_choice(y, Sigma)
       )
 
       # transform back
-      utility_moments$mu = A %*% utility_moments$mu + Xbeta
-      utility_moments$Sigma = A %*% tcrossprod(utility_moments$Sigma, A)
+      # utility_moments$mu = A %*% utility_moments$mu + Xbeta
+      # utility_moments$Sigma = A %*% tcrossprod(utility_moments$Sigma, A)
+      utility_moments$mu = vec_relative_choice(y, utility_moments$mu) + Xbeta
+      utility_moments$Sigma = sandwich_choice(y, utility_moments$Sigma)
     }
   }
   else
@@ -176,7 +182,7 @@ mnp_met_moments = function(Xbeta, Sigma, y, A, n_mc)
 {
   m = nrow(Xbeta)
 
-  initial_point = initial_mc_point(y)
+  # initial_point = initial_mc_point(y)
 
   base_choice = levels(y)[1]
   if (y == base_choice)  # base case

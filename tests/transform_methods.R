@@ -5,7 +5,8 @@ library(MomTrunc)
 
 p = 1
 n_obs = 2000
-n_choices = 25
+# n_choices = 25
+n_choices = 100
 
 # tol = 0.0005
 tol = 1e-2
@@ -71,7 +72,7 @@ probit_ep =  mnp_probit(
   scale_iden_method = "trace",
   verbose=5,
   record_history=TRUE,
-  transform=TRUE
+  transform=FALSE
 )
 stopCluster(cl)
 
