@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include "epmnp.h"
 
 using namespace Rcpp;
 
@@ -81,29 +82,12 @@ double symmetrize_and_diff(NumericMatrix& Sigma, const NumericMatrix& Sigma_old)
 
 } // namespace
 
-//' Sparse EP moment approximation for multinomial probit
-//'
-//' @param mu Mean vector of the latent utilities.
-//' @param Sigma Covariance matrix of the latent utilities.
-//' @param choice_index Choice index: 0 for the base choice, otherwise 1..m for
-//'   the selected non-base latent utility.
-//' @return A list with approximate truncated-normal `mu` and `Sigma`.
-// [[Rcpp::export]]
-List epmnp(NumericVector mu, NumericMatrix Sigma, int choice_index) {
-  const int m = mu.size();
+void epmnp_moments_inplace(
+    NumericVector mu_ep,
+    NumericMatrix Sigma_ep,
+    int choice_index) {
+  const int m = mu_ep.size();
 
-  if (m < 1) {
-    stop("mu must have positive length");
-  }
-  if (Sigma.nrow() != m || Sigma.ncol() != m) {
-    stop("Sigma must be a square matrix with dimensions matching mu");
-  }
-  if (choice_index < 0 || choice_index > m) {
-    stop("choice_index must be between 0 and length(mu)");
-  }
-
-  NumericVector mu_ep = clone(mu);
-  NumericMatrix Sigma_ep = clone(Sigma);
   NumericVector tau(m);
   NumericVector eta(m);
 
@@ -213,6 +197,32 @@ List epmnp(NumericVector mu, NumericMatrix Sigma, int choice_index) {
       break;
     }
   }
+}
+
+//' Sparse EP moment approximation for multinomial probit
+//'
+//' @param mu Mean vector of the latent utilities.
+//' @param Sigma Covariance matrix of the latent utilities.
+//' @param choice_index Choice index: 0 for the base choice, otherwise 1..m for
+//'   the selected non-base latent utility.
+//' @return A list with approximate truncated-normal `mu` and `Sigma`.
+// [[Rcpp::export]]
+List epmnp(NumericVector mu, NumericMatrix Sigma, int choice_index) {
+  const int m = mu.size();
+
+  if (m < 1) {
+    stop("mu must have positive length");
+  }
+  if (Sigma.nrow() != m || Sigma.ncol() != m) {
+    stop("Sigma must be a square matrix with dimensions matching mu");
+  }
+  if (choice_index < 0 || choice_index > m) {
+    stop("choice_index must be between 0 and length(mu)");
+  }
+
+  NumericVector mu_ep = clone(mu);
+  NumericMatrix Sigma_ep = clone(Sigma);
+  epmnp_moments_inplace(mu_ep, Sigma_ep, choice_index);
 
   return List::create(
     Named("mu") = mu_ep,

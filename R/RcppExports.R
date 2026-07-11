@@ -12,7 +12,17 @@ epmnp <- function(mu, Sigma, choice_index) {
     .Call(`_fsprobit_epmnp`, mu, Sigma, choice_index)
 }
 
-rcpp_hello <- function() {
-    .Call(`_fsprobit_rcpp_hello`)
+#' Accumulate E-step sufficient statistics for multinomial probit
+#'
+#' @param X \eqn{n \times m \times p} covariate array.
+#' @param Y Integer response codes with base choice coded as 1.
+#' @param obs_set One-based observation indices to include.
+#' @param beta Current or effective coefficient matrix.
+#' @param Sigma Current or effective latent utility covariance.
+#' @param Precision Current latent utility precision.
+#' @param E_method E-step moment method. Currently only `"EPMNP"`.
+#' @return A list of accumulated M-step sufficient statistics.
+mnp_probit_accumulate_cpp <- function(X, Y, obs_set, beta, Sigma, Precision, E_method) {
+    .Call(`_fsprobit_mnp_probit_accumulate_cpp`, X, Y, obs_set, beta, Sigma, Precision, E_method)
 }
 

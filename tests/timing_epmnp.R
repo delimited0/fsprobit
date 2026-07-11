@@ -9,8 +9,8 @@ cat("\n=== Setup ===\n")
 
 set.seed(202407)
 
-n_obs = 150
-n_choices = 8
+n_obs = 10050
+n_choices = 10
 m = n_choices - 1
 p = 2
 
@@ -147,17 +147,22 @@ cat("\n=== Optional Full mnp_probit Timing ===\n")
 # less isolated than the timing above.
 RUN_FULL_MODEL_TIMING = TRUE
 
+dim(Sigma_iden)
+Sigma_init = diag(m)
+coef_init = matrix(0, nrow = p)
+max_iter = 100
+
 if (RUN_FULL_MODEL_TIMING) {
   common_args = list(
     X = X,
     Y = Y,
     true_trace = m,
-    Sigma_init = Sigma_iden,
-    beta_init = coef_true,
-    max_iter = 1,
+    Sigma_init = Sigma_init,
+    beta_init = coef_init,
+    max_iter = max_iter,
     update_beta = TRUE,
-    record_history = FALSE,
-    verbose = 0
+    record_history = TRUE,
+    verbose = 1
   )
 
   cat("Timing mnp_probit with E_method = 'EP'...\n")
@@ -172,14 +177,38 @@ if (RUN_FULL_MODEL_TIMING) {
   })
   print(sparse_model_time)
 
+  cat("\nTiming mnp_probit_accelerated with E_method = 'EPMNP'...\n")
+  accelerated_model_time = system.time({
+    accelerated_fit = do.call(
+      mnp_probit_accelerated,
+      c(common_args, list(E_method = "EPMNP"))
+    )
+  })
+  print(accelerated_model_time)
+
   model_elapsed = c(
     old_dense_ep = unname(old_model_time[["elapsed"]]),
-    sparse_mnp_ep = unname(sparse_model_time[["elapsed"]])
+    sparse_mnp_ep = unname(sparse_model_time[["elapsed"]]),
+    accelerated_mnp_ep = unname(accelerated_model_time[["elapsed"]])
   )
 
   cat("\nFull model elapsed seconds:\n")
   print(model_elapsed)
 
-  cat("\nFull model speedup, old elapsed / sparse elapsed:\n")
+  cat("\nFull model speedup relative to original dense EP:\n")
   print(model_elapsed[["old_dense_ep"]] / model_elapsed[["sparse_mnp_ep"]])
+  print(model_elapsed[["old_dense_ep"]] / model_elapsed[["accelerated_mnp_ep"]])
 }
+
+old_fit$beta
+
+old_fit$iters
+
+coef_true
+
+sparse_fit$beta
+sparse_fit$Sigma
+
+sparse_fit$iters
+
+Sigma_iden

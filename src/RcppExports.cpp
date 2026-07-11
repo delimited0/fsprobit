@@ -23,20 +23,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_hello
-List rcpp_hello();
-RcppExport SEXP _fsprobit_rcpp_hello() {
+// mnp_probit_accumulate_cpp
+List mnp_probit_accumulate_cpp(NumericVector X, IntegerVector Y, IntegerVector obs_set, NumericMatrix beta, NumericMatrix Sigma, NumericMatrix Precision, std::string E_method);
+RcppExport SEXP _fsprobit_mnp_probit_accumulate_cpp(SEXP XSEXP, SEXP YSEXP, SEXP obs_setSEXP, SEXP betaSEXP, SEXP SigmaSEXP, SEXP PrecisionSEXP, SEXP E_methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpp_hello());
+    Rcpp::traits::input_parameter< NumericVector >::type X(XSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type obs_set(obs_setSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Sigma(SigmaSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Precision(PrecisionSEXP);
+    Rcpp::traits::input_parameter< std::string >::type E_method(E_methodSEXP);
+    rcpp_result_gen = Rcpp::wrap(mnp_probit_accumulate_cpp(X, Y, obs_set, beta, Sigma, Precision, E_method));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_fsprobit_epmnp", (DL_FUNC) &_fsprobit_epmnp, 3},
-    {"_fsprobit_rcpp_hello", (DL_FUNC) &_fsprobit_rcpp_hello, 0},
+    {"_fsprobit_mnp_probit_accumulate_cpp", (DL_FUNC) &_fsprobit_mnp_probit_accumulate_cpp, 7},
     {NULL, NULL, 0}
 };
 
