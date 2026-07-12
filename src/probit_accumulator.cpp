@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "epmnp.h"
+#include "hmcmnp.h"
 
 using namespace Rcpp;
 
@@ -20,8 +21,8 @@ int array4_index(int r, int c, int k, int l, int m, int p) {
 }
 
 void validate_method(const std::string& E_method) {
-  if (E_method != "EPMNP") {
-    stop("mnp_probit_accelerated currently supports C++ accumulator E_method = 'EPMNP' only");
+  if (E_method != "EPMNP" && E_method != "HMC") {
+    stop("mnp_probit_accelerated supports E_method = 'EPMNP' or 'HMC'");
   }
 }
 
@@ -35,7 +36,8 @@ void validate_method(const std::string& E_method) {
 //' @param beta Current or effective coefficient matrix.
 //' @param Sigma Current or effective latent utility covariance.
 //' @param Precision Current latent utility precision.
-//' @param E_method E-step moment method. Currently only `"EPMNP"`.
+//' @param E_method E-step moment method: `"EPMNP"` or `"HMC"`.
+//' @param n_mc Number of retained Monte Carlo samples for HMC.
 //' @return A list of accumulated M-step sufficient statistics.
 // [[Rcpp::export]]
 List mnp_probit_accumulate_cpp(
@@ -45,9 +47,13 @@ List mnp_probit_accumulate_cpp(
     NumericMatrix beta,
     NumericMatrix Sigma,
     NumericMatrix Precision,
-    std::string E_method) {
+    std::string E_method,
+    int n_mc) {
 
   validate_method(E_method);
+  if (E_method == "HMC" && n_mc < 2) {
+    stop("n_mc must be at least 2 for HMC");
+  }
 
   IntegerVector dims = X.attr("dim");
   if (dims.size() != 3) {
@@ -94,18 +100,25 @@ List mnp_probit_accumulate_cpp(
       stop("Y contains a choice outside the valid range for X");
     }
 
-    NumericVector mu_ep(m);
-    NumericMatrix Sigma_ep = clone(Sigma);
+    NumericVector moment_mu(m);
+    NumericMatrix moment_sigma(m, m);
 
     for (int r = 0; r < m; ++r) {
       double value = 0.0;
       for (int k = 0; k < p; ++k) {
         value += X[x_index(obs_idx, r, k, n, m)] * beta(k, 0);
       }
-      mu_ep[r] = value;
+      moment_mu[r] = value;
     }
 
-    epmnp_moments_inplace(mu_ep, Sigma_ep, choice_index);
+    if (E_method == "EPMNP") {
+      moment_sigma = clone(Sigma);
+      epmnp_moments_inplace(moment_mu, moment_sigma, choice_index);
+    } else {
+      List moments = hmcmnp_moments(moment_mu, Precision, choice_index, n_mc);
+      moment_mu = as<NumericVector>(moments["mu"]);
+      moment_sigma = as<NumericMatrix>(moments["Sigma"]);
+    }
 
     for (int k = 0; k < p; ++k) {
       for (int c = 0; c < m; ++c) {
@@ -128,14 +141,15 @@ List mnp_probit_accumulate_cpp(
 
       double b_value = 0.0;
       for (int c = 0; c < m; ++c) {
-        b_value += tXPrecision[k + p * c] * mu_ep[c];
+        b_value += tXPrecision[k + p * c] * moment_mu[c];
       }
       gls_b(k, 0) += b_value;
     }
 
     for (int r = 0; r < m; ++r) {
       for (int c = 0; c < m; ++c) {
-        E_second_moment(r, c) += Sigma_ep(r, c) + mu_ep[r] * mu_ep[c];
+        E_second_moment(r, c) +=
+          moment_sigma(r, c) + moment_mu[r] * moment_mu[c];
       }
     }
 
@@ -143,7 +157,7 @@ List mnp_probit_accumulate_cpp(
       for (int r = 0; r < m; ++r) {
         for (int c = 0; c < m; ++c) {
           mu_X_sum[array3_index(r, c, k, m)] +=
-            mu_ep[r] * X[x_index(obs_idx, c, k, n, m)];
+            moment_mu[r] * X[x_index(obs_idx, c, k, n, m)];
         }
       }
     }

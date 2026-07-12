@@ -23,9 +23,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// hmcmnp
+List hmcmnp(NumericVector mu, NumericMatrix Precision, int choice_index, int n_mc);
+RcppExport SEXP _fsprobit_hmcmnp(SEXP muSEXP, SEXP PrecisionSEXP, SEXP choice_indexSEXP, SEXP n_mcSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Precision(PrecisionSEXP);
+    Rcpp::traits::input_parameter< int >::type choice_index(choice_indexSEXP);
+    Rcpp::traits::input_parameter< int >::type n_mc(n_mcSEXP);
+    rcpp_result_gen = Rcpp::wrap(hmcmnp(mu, Precision, choice_index, n_mc));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mnp_probit_accumulate_cpp
-List mnp_probit_accumulate_cpp(NumericVector X, IntegerVector Y, IntegerVector obs_set, NumericMatrix beta, NumericMatrix Sigma, NumericMatrix Precision, std::string E_method);
-RcppExport SEXP _fsprobit_mnp_probit_accumulate_cpp(SEXP XSEXP, SEXP YSEXP, SEXP obs_setSEXP, SEXP betaSEXP, SEXP SigmaSEXP, SEXP PrecisionSEXP, SEXP E_methodSEXP) {
+List mnp_probit_accumulate_cpp(NumericVector X, IntegerVector Y, IntegerVector obs_set, NumericMatrix beta, NumericMatrix Sigma, NumericMatrix Precision, std::string E_method, int n_mc);
+RcppExport SEXP _fsprobit_mnp_probit_accumulate_cpp(SEXP XSEXP, SEXP YSEXP, SEXP obs_setSEXP, SEXP betaSEXP, SEXP SigmaSEXP, SEXP PrecisionSEXP, SEXP E_methodSEXP, SEXP n_mcSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -36,14 +50,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type Sigma(SigmaSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type Precision(PrecisionSEXP);
     Rcpp::traits::input_parameter< std::string >::type E_method(E_methodSEXP);
-    rcpp_result_gen = Rcpp::wrap(mnp_probit_accumulate_cpp(X, Y, obs_set, beta, Sigma, Precision, E_method));
+    Rcpp::traits::input_parameter< int >::type n_mc(n_mcSEXP);
+    rcpp_result_gen = Rcpp::wrap(mnp_probit_accumulate_cpp(X, Y, obs_set, beta, Sigma, Precision, E_method, n_mc));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_fsprobit_epmnp", (DL_FUNC) &_fsprobit_epmnp, 3},
-    {"_fsprobit_mnp_probit_accumulate_cpp", (DL_FUNC) &_fsprobit_mnp_probit_accumulate_cpp, 7},
+    {"_fsprobit_hmcmnp", (DL_FUNC) &_fsprobit_hmcmnp, 4},
+    {"_fsprobit_mnp_probit_accumulate_cpp", (DL_FUNC) &_fsprobit_mnp_probit_accumulate_cpp, 8},
     {NULL, NULL, 0}
 };
 

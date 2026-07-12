@@ -3,7 +3,7 @@ library(mvtnorm)
 library(doParallel)
 
 p = 1
-n_obs = 2000
+n_obs = 10000
 n_choices = 4
 
 tol = .001
@@ -32,6 +32,45 @@ simdata = generate_custom_identified_choice_data(
   Sigma_iden = solve(Prec_iden),
   seed = 1
 )
+
+
+# compare EP and HMC ----
+ep_fit = mnp_probit_accelerated(
+  X = simdata$X, Y = simdata$Y,
+  beta_init = coef_init,
+  Sigma_init = Sigma_init,
+  E_method = "EPMNP",
+  n_choices = n_choices,
+  true_trace = sum(diag(Prec_iden)),
+  tol = tol,
+  max_iter = max_iter,
+  conv_metric = conv_metric,
+  shift_iden_method = "ref",
+  scale_iden_method = "trace",
+  record_history = TRUE,
+  verbose = 5
+)
+
+ep_fit$beta_history |> plot(type = "l")
+plot(ep_fit$Sigma_history[, 1, 1])
+
+hmc_fit = mnp_probit_accelerated(
+  X = simdata$X, Y = simdata$Y,
+  beta_init = coef_init,
+  Sigma_init = Sigma_init,
+  E_method = "HMC",
+  n_choices = n_choices,
+  true_trace = sum(diag(Prec_iden)),
+  tol = tol,
+  max_iter = max_iter,
+  conv_metric = conv_metric,
+  shift_iden_method = "ref",
+  scale_iden_method = "trace",
+  record_history = TRUE,
+  verbose = 5
+)
+
+
 
 # fit model ----
 registerDoParallel(4)
