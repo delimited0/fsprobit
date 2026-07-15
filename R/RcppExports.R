@@ -23,6 +23,17 @@ hmcmnp <- function(mu, Precision, choice_index, n_mc) {
     .Call(`_fsprobit_hmcmnp`, mu, Precision, choice_index, n_mc)
 }
 
+#' Minimax-tilted moments for reference-identified multinomial probit
+#'
+#' @param mu Mean vector of the relative latent utilities.
+#' @param Sigma Covariance matrix of the relative latent utilities.
+#' @param choice_index Choice index: 0 for the base choice, otherwise 1..m.
+#' @param n_mc Number of accepted independent Monte Carlo samples.
+#' @return A list containing Monte Carlo estimates `mu` and `Sigma`.
+metmnp <- function(mu, Sigma, choice_index, n_mc) {
+    .Call(`_fsprobit_metmnp`, mu, Sigma, choice_index, n_mc)
+}
+
 #' Accumulate E-step sufficient statistics for multinomial probit
 #'
 #' @param X \eqn{n \times m \times p} covariate array.
@@ -31,8 +42,8 @@ hmcmnp <- function(mu, Precision, choice_index, n_mc) {
 #' @param beta Current or effective coefficient matrix.
 #' @param Sigma Current or effective latent utility covariance.
 #' @param Precision Current latent utility precision.
-#' @param E_method E-step moment method: `"EPMNP"` or `"HMC"`.
-#' @param n_mc Number of retained Monte Carlo samples for HMC.
+#' @param E_method E-step moment method: `"EPMNP"`, `"HMC"`, or `"MET"`.
+#' @param n_mc Number of retained Monte Carlo samples for HMC or MET.
 #' @return A list of accumulated M-step sufficient statistics.
 mnp_probit_accumulate_cpp <- function(X, Y, obs_set, beta, Sigma, Precision, E_method, n_mc) {
     .Call(`_fsprobit_mnp_probit_accumulate_cpp`, X, Y, obs_set, beta, Sigma, Precision, E_method, n_mc)

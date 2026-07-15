@@ -37,6 +37,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// metmnp
+List metmnp(NumericVector mu, NumericMatrix Sigma, int choice_index, int n_mc);
+RcppExport SEXP _fsprobit_metmnp(SEXP muSEXP, SEXP SigmaSEXP, SEXP choice_indexSEXP, SEXP n_mcSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Sigma(SigmaSEXP);
+    Rcpp::traits::input_parameter< int >::type choice_index(choice_indexSEXP);
+    Rcpp::traits::input_parameter< int >::type n_mc(n_mcSEXP);
+    rcpp_result_gen = Rcpp::wrap(metmnp(mu, Sigma, choice_index, n_mc));
+    return rcpp_result_gen;
+END_RCPP
+}
 // mnp_probit_accumulate_cpp
 List mnp_probit_accumulate_cpp(NumericVector X, IntegerVector Y, IntegerVector obs_set, NumericMatrix beta, NumericMatrix Sigma, NumericMatrix Precision, std::string E_method, int n_mc);
 RcppExport SEXP _fsprobit_mnp_probit_accumulate_cpp(SEXP XSEXP, SEXP YSEXP, SEXP obs_setSEXP, SEXP betaSEXP, SEXP SigmaSEXP, SEXP PrecisionSEXP, SEXP E_methodSEXP, SEXP n_mcSEXP) {
@@ -59,6 +73,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_fsprobit_epmnp", (DL_FUNC) &_fsprobit_epmnp, 3},
     {"_fsprobit_hmcmnp", (DL_FUNC) &_fsprobit_hmcmnp, 4},
+    {"_fsprobit_metmnp", (DL_FUNC) &_fsprobit_metmnp, 4},
     {"_fsprobit_mnp_probit_accumulate_cpp", (DL_FUNC) &_fsprobit_mnp_probit_accumulate_cpp, 8},
     {NULL, NULL, 0}
 };

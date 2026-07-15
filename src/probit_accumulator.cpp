@@ -3,6 +3,7 @@
 #include <vector>
 #include "epmnp.h"
 #include "hmcmnp.h"
+#include "metmnp.h"
 
 using namespace Rcpp;
 
@@ -21,8 +22,8 @@ int array4_index(int r, int c, int k, int l, int m, int p) {
 }
 
 void validate_method(const std::string& E_method) {
-  if (E_method != "EPMNP" && E_method != "HMC") {
-    stop("mnp_probit_accelerated supports E_method = 'EPMNP' or 'HMC'");
+  if (E_method != "EPMNP" && E_method != "HMC" && E_method != "MET") {
+    stop("mnp_probit_accelerated supports E_method = 'EPMNP', 'HMC', or 'MET'");
   }
 }
 
@@ -36,8 +37,8 @@ void validate_method(const std::string& E_method) {
 //' @param beta Current or effective coefficient matrix.
 //' @param Sigma Current or effective latent utility covariance.
 //' @param Precision Current latent utility precision.
-//' @param E_method E-step moment method: `"EPMNP"` or `"HMC"`.
-//' @param n_mc Number of retained Monte Carlo samples for HMC.
+//' @param E_method E-step moment method: `"EPMNP"`, `"HMC"`, or `"MET"`.
+//' @param n_mc Number of retained Monte Carlo samples for HMC or MET.
 //' @return A list of accumulated M-step sufficient statistics.
 // [[Rcpp::export]]
 List mnp_probit_accumulate_cpp(
@@ -51,8 +52,8 @@ List mnp_probit_accumulate_cpp(
     int n_mc) {
 
   validate_method(E_method);
-  if (E_method == "HMC" && n_mc < 2) {
-    stop("n_mc must be at least 2 for HMC");
+  if ((E_method == "HMC" || E_method == "MET") && n_mc < 2) {
+    stop("n_mc must be at least 2 for HMC or MET");
   }
 
   IntegerVector dims = X.attr("dim");
@@ -114,8 +115,12 @@ List mnp_probit_accumulate_cpp(
     if (E_method == "EPMNP") {
       moment_sigma = clone(Sigma);
       epmnp_moments_inplace(moment_mu, moment_sigma, choice_index);
-    } else {
+    } else if (E_method == "HMC") {
       List moments = hmcmnp_moments(moment_mu, Precision, choice_index, n_mc);
+      moment_mu = as<NumericVector>(moments["mu"]);
+      moment_sigma = as<NumericMatrix>(moments["Sigma"]);
+    } else {
+      List moments = metmnp_moments(moment_mu, Sigma, choice_index, n_mc);
       moment_mu = as<NumericVector>(moments["mu"]);
       moment_sigma = as<NumericMatrix>(moments["Sigma"]);
     }

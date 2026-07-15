@@ -36,13 +36,13 @@ mnp_probit_accelerated = function(
 
   Ts = NULL
 
-  if (!(E_method %in% c("EPMNP", "HMC")))
-    stop("mnp_probit_accelerated supports E_method = 'EPMNP' or 'HMC'")
-  if (E_method == "HMC" && shift_iden_method != "ref")
-    stop("HMC requires shift_iden_method = 'ref'")
-  if (E_method == "HMC" && (!is.numeric(n_mc) || length(n_mc) != 1 ||
+  if (!(E_method %in% c("EPMNP", "HMC", "MET")))
+    stop("mnp_probit_accelerated supports E_method = 'EPMNP', 'HMC', or 'MET'")
+  if (E_method %in% c("HMC", "MET") && shift_iden_method != "ref")
+    stop(paste0(E_method, " requires shift_iden_method = 'ref'"))
+  if (E_method %in% c("HMC", "MET") && (!is.numeric(n_mc) || length(n_mc) != 1 ||
       is.na(n_mc) || n_mc < 2 || n_mc != as.integer(n_mc)))
-    stop("n_mc must be a single integer of at least 2 for HMC")
+    stop("n_mc must be a single integer of at least 2 for HMC or MET")
 
   # identified dimensions
   if (shift_iden_method == "ref")

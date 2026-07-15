@@ -70,7 +70,29 @@ hmc_fit = mnp_probit_accelerated(
   verbose = 5
 )
 
+hmc_fit$beta_history |> plot(type = "l")
+hmc_fit$Sigma_history[,1,1] |> plot(type = "l")
+hmc_fit$Sigma_history[,1,2] |> plot(type = "l")
 
+met_fit = mnp_probit_accelerated(
+  X = simdata$X, Y = simdata$Y,
+  beta_init = coef_init,
+  Sigma_init = Sigma_init,
+  E_method = "MET",
+  n_choices = n_choices,
+  true_trace = sum(diag(Prec_iden)),
+  tol = tol,
+  max_iter = max_iter,
+  conv_metric = conv_metric,
+  shift_iden_method = "ref",
+  scale_iden_method = "trace",
+  record_history = TRUE,
+  verbose = 5
+)
+
+met_fit$beta_history |> plot(type = "l")
+met_fit$Sigma_history[,1,1] |> plot(type = "l")
+met_fit$Sigma_history[,1,2] |> plot(type = "l")
 
 # fit model ----
 registerDoParallel(4)
