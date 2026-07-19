@@ -268,6 +268,92 @@ Prec_newton_estimation = function(
   # return(Sigma_new)
 }
 
+#' Estimate a covariance matrix subject to a trace constraint
+#'
+#' Performs the covariance M-step by using the eigenvectors of the expected
+#' sample covariance and solving for the Lagrange multiplier associated with
+#' the trace constraint.
+#'
+#' @param E_sample_cov Expected sample covariance matrix from the E-step.
+#' @param true_trace Required trace of the updated covariance matrix.
+#' @return The updated covariance matrix.
+Cov_newton_estimation = function(E_sample_cov, true_trace)
+{
+  if (!is.matrix(E_sample_cov) ||
+      nrow(E_sample_cov) != ncol(E_sample_cov) ||
+      nrow(E_sample_cov) == 0) {
+    stop("E_sample_cov must be a non-empty square matrix")
+  }
+  if (any(!is.finite(E_sample_cov))) {
+    stop("E_sample_cov must contain only finite values")
+  }
+  if (length(true_trace) != 1 ||
+      !is.finite(true_trace) ||
+      true_trace <= 0) {
+    stop("true_trace must be a finite positive scalar")
+  }
+
+  symmetry_tol = 100 * .Machine$double.eps *
+    max(1, max(abs(E_sample_cov)))
+  if (max(abs(E_sample_cov - t(E_sample_cov))) > symmetry_tol) {
+    stop("E_sample_cov must be symmetric")
+  }
+
+  eigen_decomp = eigen(E_sample_cov, symmetric = TRUE)
+  s_vec = eigen_decomp$values
+  eigen_tol = 100 * .Machine$double.eps * max(1, max(abs(s_vec)))
+  if (any(s_vec <= eigen_tol)) {
+    stop("E_sample_cov must be positive definite")
+  }
+
+  sigma_at = function(lambda) {
+    2 * s_vec / (1 + sqrt(1 + 4 * lambda * s_vec))
+  }
+  trace_difference = function(lambda) {
+    sum(sigma_at(lambda)) - true_trace
+  }
+
+  trace_at_zero = sum(s_vec)
+  trace_tol = sqrt(.Machine$double.eps) * max(1, true_trace)
+  if (abs(trace_at_zero - true_trace) <= trace_tol) {
+    sigma_vec = s_vec
+  } else {
+    if (trace_at_zero > true_trace) {
+      lower = 0
+      upper = 1
+      while (trace_difference(upper) > 0) {
+        upper = upper * 2
+        if (!is.finite(upper)) {
+          stop("Could not bracket the covariance trace multiplier")
+        }
+      }
+    } else {
+      upper = 0
+      lower_limit = -1 / (4 * max(s_vec))
+      lower = lower_limit * (1 - sqrt(.Machine$double.eps))
+      if (trace_difference(lower) < 0) {
+        stop(paste0(
+          "No covariance update on the specified solution branch has trace ",
+          true_trace
+        ))
+      }
+    }
+
+    lambda = uniroot(
+      trace_difference,
+      interval = c(lower, upper),
+      tol = .Machine$double.eps^0.75
+    )$root
+    sigma_vec = sigma_at(lambda)
+  }
+
+  Sigma_new = eigen_decomp$vectors %*%
+    (sigma_vec * t(eigen_decomp$vectors))
+  Sigma_new = (Sigma_new + t(Sigma_new)) / 2
+
+  return(Sigma_new)
+}
+
 Prec_cvx_estimation = function(
     E_sample_cov,
     true_trace,

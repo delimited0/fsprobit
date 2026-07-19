@@ -318,13 +318,15 @@ mnp_probit = function(
       stop("Invalid m step method")
     }
 
-    # m_step_bound_new = - (sum(diag(E_sample_cov %*% Precision_new)) + determinant(Precision_new)$modulus )
+    # m_step_bound_new = determinant(Precision_new)$modulus -
+    #   sum(diag(E_sample_cov %*% Precision_new))
 
     # update parameters
     beta = beta_new * (1 - M_damping) + M_damping * beta_old
     Precision = Precision_new * (1 - M_damping) + M_damping * Precision_old
     Sigma = Sigma_new * (1 - M_damping) + M_damping * Sigma_old
-    m_step_bound = - (sum(diag(E_sample_cov %*% Precision)) + determinant(Precision)$modulus )
+    m_step_bound = determinant(Precision)$modulus -
+      sum(diag(E_sample_cov %*% Precision))
 
     #### record history ####
     if (record_history)

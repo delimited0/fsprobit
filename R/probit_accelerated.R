@@ -168,6 +168,16 @@ mnp_probit_accelerated = function(
       Precision_new = Precision_new + nugget*diag(m)
       Sigma_new = solve(Precision_new)
     }
+    else if (M_method == "Covariance")
+    {
+      Sigma_new = Cov_newton_estimation(
+        E_sample_cov = E_sample_cov,
+        true_trace = true_trace
+      )
+      Precision_new = solve(Sigma_new)
+      Precision_new = Precision_new + nugget*diag(m)
+      Sigma_new = solve(Precision_new)
+    }
     else if (M_method == "CVX")
     {
       Precision_new = Prec_cvx_estimation(
@@ -184,13 +194,15 @@ mnp_probit_accelerated = function(
       stop("Invalid m step method")
     }
 
-    # m_step_bound_new = - (sum(diag(E_sample_cov %*% Precision_new)) + determinant(Precision_new)$modulus )
+    # m_step_bound_new = determinant(Precision_new)$modulus -
+    #   sum(diag(E_sample_cov %*% Precision_new))
 
     # update parameters
     beta = beta_new * (1 - M_damping) + M_damping * beta_old
     Precision = Precision_new * (1 - M_damping) + M_damping * Precision_old
     Sigma = Sigma_new * (1 - M_damping) + M_damping * Sigma_old
-    m_step_bound = - (sum(diag(E_sample_cov %*% Precision)) + determinant(Precision)$modulus )
+    m_step_bound = determinant(Precision)$modulus -
+      sum(diag(E_sample_cov %*% Precision))
 
     #### record history ####
     if (record_history)
