@@ -3,7 +3,7 @@ library(mvtnorm)
 library(doParallel)
 
 p = 1
-n_obs = 10000
+n_obs = 1000
 n_choices = 6
 
 tol = .001
