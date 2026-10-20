@@ -44,8 +44,23 @@ metmnp <- function(mu, Sigma, choice_index, n_mc) {
 #' @param Precision Current latent utility precision.
 #' @param E_method E-step moment method: `"EPMNP"`, `"HMC"`, or `"MET"`.
 #' @param n_mc Number of retained Monte Carlo samples for HMC or MET.
+#' @param return_cross_tensors Whether to return the legacy contraction tensors.
+#'   Set to `false` to return posterior means for the optimized second pass.
 #' @return A list of accumulated M-step sufficient statistics.
-mnp_probit_accumulate_cpp <- function(X, Y, obs_set, beta, Sigma, Precision, E_method, n_mc) {
-    .Call(`_fsprobit_mnp_probit_accumulate_cpp`, X, Y, obs_set, beta, Sigma, Precision, E_method, n_mc)
+mnp_probit_accumulate_cpp <- function(X, Y, obs_set, beta, Sigma, Precision, E_method, n_mc, return_cross_tensors = TRUE) {
+    .Call(`_fsprobit_mnp_probit_accumulate_cpp`, X, Y, obs_set, beta, Sigma, Precision, E_method, n_mc, return_cross_tensors)
+}
+
+#' Complete the expected covariance statistic after estimating beta
+#'
+#' @param X \eqn{n \times m \times p} covariate array.
+#' @param obs_set One-based observation indices used by the E-step.
+#' @param moment_mu \eqn{m \times n_used} posterior mean matrix, with one
+#'   observation per column.
+#' @param beta_new Newly estimated \eqn{p \times 1} coefficient matrix.
+#' @param E_second_moment Sum of posterior second moments from the E-step.
+#' @return The averaged expected residual covariance matrix.
+mnp_probit_residual_cov_cpp <- function(X, obs_set, moment_mu, beta_new, E_second_moment) {
+    .Call(`_fsprobit_mnp_probit_residual_cov_cpp`, X, obs_set, moment_mu, beta_new, E_second_moment)
 }
 

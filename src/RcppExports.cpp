@@ -52,8 +52,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // mnp_probit_accumulate_cpp
-List mnp_probit_accumulate_cpp(NumericVector X, IntegerVector Y, IntegerVector obs_set, NumericMatrix beta, NumericMatrix Sigma, NumericMatrix Precision, std::string E_method, int n_mc);
-RcppExport SEXP _fsprobit_mnp_probit_accumulate_cpp(SEXP XSEXP, SEXP YSEXP, SEXP obs_setSEXP, SEXP betaSEXP, SEXP SigmaSEXP, SEXP PrecisionSEXP, SEXP E_methodSEXP, SEXP n_mcSEXP) {
+List mnp_probit_accumulate_cpp(NumericVector X, IntegerVector Y, IntegerVector obs_set, NumericMatrix beta, NumericMatrix Sigma, NumericMatrix Precision, std::string E_method, int n_mc, bool return_cross_tensors);
+RcppExport SEXP _fsprobit_mnp_probit_accumulate_cpp(SEXP XSEXP, SEXP YSEXP, SEXP obs_setSEXP, SEXP betaSEXP, SEXP SigmaSEXP, SEXP PrecisionSEXP, SEXP E_methodSEXP, SEXP n_mcSEXP, SEXP return_cross_tensorsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -65,7 +65,23 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type Precision(PrecisionSEXP);
     Rcpp::traits::input_parameter< std::string >::type E_method(E_methodSEXP);
     Rcpp::traits::input_parameter< int >::type n_mc(n_mcSEXP);
-    rcpp_result_gen = Rcpp::wrap(mnp_probit_accumulate_cpp(X, Y, obs_set, beta, Sigma, Precision, E_method, n_mc));
+    Rcpp::traits::input_parameter< bool >::type return_cross_tensors(return_cross_tensorsSEXP);
+    rcpp_result_gen = Rcpp::wrap(mnp_probit_accumulate_cpp(X, Y, obs_set, beta, Sigma, Precision, E_method, n_mc, return_cross_tensors));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mnp_probit_residual_cov_cpp
+NumericMatrix mnp_probit_residual_cov_cpp(NumericVector X, IntegerVector obs_set, NumericMatrix moment_mu, NumericMatrix beta_new, NumericMatrix E_second_moment);
+RcppExport SEXP _fsprobit_mnp_probit_residual_cov_cpp(SEXP XSEXP, SEXP obs_setSEXP, SEXP moment_muSEXP, SEXP beta_newSEXP, SEXP E_second_momentSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type X(XSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type obs_set(obs_setSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type moment_mu(moment_muSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type beta_new(beta_newSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type E_second_moment(E_second_momentSEXP);
+    rcpp_result_gen = Rcpp::wrap(mnp_probit_residual_cov_cpp(X, obs_set, moment_mu, beta_new, E_second_moment));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -74,7 +90,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_fsprobit_epmnp", (DL_FUNC) &_fsprobit_epmnp, 3},
     {"_fsprobit_hmcmnp", (DL_FUNC) &_fsprobit_hmcmnp, 4},
     {"_fsprobit_metmnp", (DL_FUNC) &_fsprobit_metmnp, 4},
-    {"_fsprobit_mnp_probit_accumulate_cpp", (DL_FUNC) &_fsprobit_mnp_probit_accumulate_cpp, 8},
+    {"_fsprobit_mnp_probit_accumulate_cpp", (DL_FUNC) &_fsprobit_mnp_probit_accumulate_cpp, 9},
+    {"_fsprobit_mnp_probit_residual_cov_cpp", (DL_FUNC) &_fsprobit_mnp_probit_residual_cov_cpp, 5},
     {NULL, NULL, 0}
 };
 

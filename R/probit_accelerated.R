@@ -129,7 +129,8 @@ mnp_probit_accelerated = function(
       Sigma = Sigma_e,
       Precision = Precision,
       E_method = E_method,
-      n_mc = as.integer(n_mc)
+      n_mc = as.integer(n_mc),
+      return_cross_tensors = FALSE
     )
 
     # M step ----
@@ -137,22 +138,13 @@ mnp_probit_accelerated = function(
     beta_new = solve(E_quantities$gls_a, E_quantities$gls_b)
 
     # E[Q | -]
-    E_sample_cov = E_quantities$E_second_moment
-    mu_X_beta = matrix(0, nrow = m, ncol = m)
-    X_beta_cross = matrix(0, nrow = m, ncol = m)
-
-    for (k in 1:p)
-      mu_X_beta = mu_X_beta + beta_new[k, 1] * E_quantities$mu_X_sum[, , k]
-
-    for (k in 1:p)
-    {
-      for (l in 1:p)
-        X_beta_cross =
-          X_beta_cross + beta_new[k, 1] * beta_new[l, 1] * E_quantities$X_cross_sum[, , k, l]
-    }
-
-    E_sample_cov = E_sample_cov - mu_X_beta - t(mu_X_beta) + X_beta_cross
-    E_sample_cov = E_sample_cov / E_quantities$n_used
+    E_sample_cov = mnp_probit_residual_cov_cpp(
+      X = X,
+      obs_set = obs_set,
+      moment_mu = E_quantities$moment_mu,
+      beta_new = beta_new,
+      E_second_moment = E_quantities$E_second_moment
+    )
 
     #### precision estimation ####
     # trace constraint
