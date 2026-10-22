@@ -3,7 +3,7 @@ library(mvtnorm)
 library(doParallel)
 
 p = 1
-n_obs = 1000
+n_obs = 10000
 n_choices = 6
 
 tol = .001
@@ -100,7 +100,8 @@ matplot(
   col = diagonal_cols,
   xlab = "Iteration",
   ylab = "Estimated covariance",
-  main = "Diagonal covariance elements"
+  main = "Diagonal covariance elements",
+  ylim = c(-1,1)
 )
 abline(h = 1, lty = 2, lwd = 2)
 legend(

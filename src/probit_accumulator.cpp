@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <algorithm>
 #include <string>
 #include <vector>
 #include "epmnp.h"
@@ -128,7 +129,7 @@ List mnp_probit_accumulate_cpp(
     }
 
     if (E_method == "EPMNP") {
-      moment_sigma = clone(Sigma);
+      std::copy(Sigma.begin(), Sigma.end(), moment_sigma.begin());
       epmnp_moments_inplace(moment_mu, moment_sigma, choice_index);
     } else if (E_method == "HMC") {
       List moments = hmcmnp_moments(moment_mu, Precision, choice_index, n_mc);

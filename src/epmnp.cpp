@@ -90,19 +90,21 @@ void epmnp_moments_inplace(
 
   NumericVector tau(m);
   NumericVector eta(m);
+  NumericVector g(m);
+  NumericVector mu_old(m);
+  NumericMatrix Sigma_old(m, m);
 
   const bool base_choice = choice_index == 0;
   const int y = choice_index - 1;
 
   for (int iter = 0; iter < MAX_ITER; ++iter) {
-    NumericVector mu_old = clone(mu_ep);
-    NumericMatrix Sigma_old = clone(Sigma_ep);
+    std::copy(mu_ep.begin(), mu_ep.end(), mu_old.begin());
+    std::copy(Sigma_ep.begin(), Sigma_ep.end(), Sigma_old.begin());
     double max_site_change = 0.0;
 
     for (int j = 0; j < m; ++j) {
       double d = 0.0;
       double s2 = 0.0;
-      NumericVector g(m);
       bool lower_zero = true;
 
       if (base_choice) {
