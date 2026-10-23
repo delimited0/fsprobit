@@ -101,7 +101,7 @@ matplot(
   xlab = "Iteration",
   ylab = "Estimated covariance",
   main = "Diagonal covariance elements",
-  ylim = c(-1,1)
+  ylim = c(-2,2)
 )
 abline(h = 1, lty = 2, lwd = 2)
 legend(
@@ -121,7 +121,8 @@ matplot(
   col = nonzero_cols,
   xlab = "Iteration",
   ylab = "Estimated covariance",
-  main = "True nonzero off-diagonal covariance elements"
+  main = "True nonzero off-diagonal covariance elements",
+  ylim = c(-1,1)
 )
 abline(h = unique(Sigma_iden[nonzero_off_diag_idx]), lty = 2, lwd = 2)
 legend(
@@ -143,7 +144,8 @@ matplot(
   col = zero_cols,
   xlab = "Iteration",
   ylab = "Estimated covariance",
-  main = "True zero off-diagonal covariance elements"
+  main = "True zero off-diagonal covariance elements",
+  ylim = c(-1,1)
 )
 abline(h = 0, lty = 2, lwd = 2)
 legend(
